@@ -1,118 +1,41 @@
 import type { ReactNode } from "react"
 import Image from "next/image"
 import {
-  ArrowUp,
-  ArrowDown,
-  Minus,
-  TrendingUp,
-  TrendingDown,
-  Circle,
   Hash,
-  GripVertical,
-  MoreHorizontal,
   Megaphone,
   Repeat,
   ShoppingCart,
   UserMinus,
   ClipboardList,
-  CheckCircle2,
-  Clock,
   Users as UsersIcon,
-  Flame,
   Calendar,
+  Crown,
+  Scale,
+  ArrowRight,
   Settings,
+  Flame,
+  TrendingUp,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
-  schedule,
   standings,
   matchups,
   activity,
   news,
   players,
-  powerRankings,
-  commishTasks,
+  injuries,
   chatMessages,
   members,
   achievements,
   weeklyAwards,
-  transactions,
+  weeklyScores,
+  HEATMAP_WEEKS,
   userLeagues,
-  type Position,
   type Team,
   type UserLeague,
 } from "@/lib/mock"
-import { Panel, PanelHeader, TeamAvatar, PlayerAvatar, TeamLogo, PositionPill, Tag, Progress } from "./primitives"
+import { TeamAvatar, PlayerAvatar, PositionPill, Tag } from "./primitives"
 import { DynamicIcon } from "./icon"
-
-/* ---------------- Widget frame (draggable look, league dashboards) ---------------- */
-export function Widget({
-  title,
-  icon,
-  action,
-  children,
-  className,
-  bodyClassName,
-}: {
-  title: ReactNode
-  icon?: ReactNode
-  action?: ReactNode
-  children: ReactNode
-  className?: string
-  bodyClassName?: string
-}) {
-  return (
-    <Panel className={cn("group/widget flex flex-col", className)}>
-      <div className="flex items-center gap-2 px-4 pt-3.5 pb-2.5">
-        <GripVertical
-          size={15}
-          className="-ml-1 cursor-grab text-muted-foreground/40 opacity-0 transition-opacity group-hover/widget:opacity-100"
-        />
-        {icon && <span className="text-muted-foreground">{icon}</span>}
-        <h3 className="text-sm font-semibold tracking-tight">{title}</h3>
-        <div className="ml-auto flex items-center gap-1.5">
-          {action}
-          <button className="grid h-6 w-6 place-items-center rounded-md text-muted-foreground/60 hover:bg-secondary hover:text-foreground" aria-label="Widget options">
-            <MoreHorizontal size={15} />
-          </button>
-        </div>
-      </div>
-      <div className={cn("flex-1 px-4 pb-4", bodyClassName)}>{children}</div>
-    </Panel>
-  )
-}
-
-/* ---------------- NFL schedule strip ---------------- */
-export function NflSchedule({ count = 7, className }: { count?: number; className?: string }) {
-  return (
-    <div className={cn("flex gap-3 overflow-x-auto no-scrollbar", className)}>
-      {schedule.slice(0, count).map((g) => (
-        <div key={g.id} className="min-w-[150px] flex-1 rounded-xl bg-secondary/50 p-3">
-          <div className="space-y-1.5">
-            {[g.away, g.home].map((t, i) => (
-              <div key={i} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <TeamLogo abbr={t.abbr} size={22} />
-                  <span className="text-sm font-semibold">{t.abbr}</span>
-                </div>
-                <span className="text-sm font-bold tabular-nums">{t.score}</span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-2.5 flex items-center justify-between border-t border-border pt-2">
-            <span className="text-[11px] text-muted-foreground">{g.kickoff}</span>
-            {g.status === "live" && (
-              <span className="flex items-center gap-1 text-[10px] font-bold text-primary">
-                <Circle size={6} className="animate-pulse fill-current" /> LIVE
-              </span>
-            )}
-            {g.status === "final" && <span className="text-[10px] font-medium text-muted-foreground">FINAL</span>}
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
 
 /* ---------------- Streak chip ---------------- */
 function Streak({ streak }: { streak: string }) {
@@ -315,117 +238,208 @@ export function PlayerNews({ layout = "cards", limit = 3 }: { layout?: "cards" |
   )
 }
 
-/* ---------------- ADP table ---------------- */
-const POS_TABS: (Position | "ALL")[] = ["ALL", "QB", "RB", "WR", "TE", "FLEX", "K", "DEF"]
-export function AdpTable({ showFilters = true, limit = 6 }: { showFilters?: boolean; limit?: number }) {
+/* ---------------- Commissioner control (admin quick-actions grid) ---------------- */
+const COMMISH_CONTROL = [
+  { icon: Calendar, label: "Schedule draft", status: "Not set", cta: "Set time", tint: "var(--pos-qb)" },
+  { icon: UsersIcon, label: "Members", status: "9 / 12 joined", cta: "Invite", tint: "var(--pos-def)" },
+  { icon: Scale, label: "Scoring & rules", status: "PPR · standard", cta: "Edit", tint: "var(--pos-flex)" },
+  { icon: Repeat, label: "Trade approvals", status: "2 pending", cta: "Review", tint: "var(--pos-rb)" },
+  { icon: Megaphone, label: "Announcement", status: "Post to league", cta: "Write", tint: "var(--pos-te)" },
+] as const
+
+export function CommishControl() {
   return (
     <div>
-      {showFilters && (
-        <div className="mb-3 flex flex-wrap gap-1.5">
-          {POS_TABS.map((p, i) => (
-            <button
-              key={p}
-              className={cn(
-                "rounded-md border px-2.5 py-1 text-xs font-semibold",
-                i === 0
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-border text-muted-foreground hover:text-foreground",
-              )}
+      <div className="mb-3 flex items-center gap-2">
+        <Tag tone="warning">
+          <Crown size={11} /> Admin
+        </Tag>
+        <button className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-destructive hover:opacity-80">
+          Open console <ArrowRight size={13} />
+        </button>
+      </div>
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-5">
+        {COMMISH_CONTROL.map((c) => (
+          <div key={c.label} className="flex flex-col rounded-xl border border-border bg-secondary/30 p-3">
+            <span
+              className="grid h-9 w-9 place-items-center rounded-lg"
+              style={{ background: `color-mix(in oklch, ${c.tint} 20%, transparent)`, color: c.tint }}
             >
-              {p}
+              <c.icon size={17} />
+            </span>
+            <div className="mt-2.5 text-sm font-semibold leading-tight">{c.label}</div>
+            <div className="mt-0.5 text-[11px] text-muted-foreground">{c.status}</div>
+            <button className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-destructive hover:opacity-80">
+              {c.cta} <ArrowRight size={12} />
             </button>
-          ))}
-        </div>
-      )}
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-border text-left text-xs text-muted-foreground">
-            <th className="pb-2 font-medium">Name</th>
-            <th className="pb-2 font-medium">Pos</th>
-            <th className="pb-2 text-right font-medium">ADP</th>
-          </tr>
-        </thead>
-        <tbody>
-          {players.slice(0, limit).map((p) => (
-            <tr key={p.id} className="border-b border-border/50 last:border-0">
-              <td className="py-2.5">
-                <div className="flex items-center gap-2.5">
-                  <PlayerAvatar name={p.name} pos={p.pos} size={26} />
-                  <span className="font-medium">{p.name}</span>
-                </div>
-              </td>
-              <td className="py-2.5">
-                <PositionPill pos={p.pos} />
-              </td>
-              <td className="py-2.5 text-right font-semibold tabular-nums">{p.adp}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
 
-/* ---------------- Power rankings ---------------- */
-export function PowerRankings({ limit = 6 }: { limit?: number }) {
+/* ---------------- Win probability gauge (red → amber → green semicircle) ---------------- */
+const GAUGE = { W: 240, R: 96, SW: 18, CX: 120, CY: 116 }
+
+function gaugePoint(t: number, radius = GAUGE.R) {
+  const a = Math.PI * (1 + t) // t=0 → left (180°), t=1 → right (360°)
+  return [GAUGE.CX + radius * Math.cos(a), GAUGE.CY + radius * Math.sin(a)] as const
+}
+
+function gaugeArc(t0: number, t1: number) {
+  const [x0, y0] = gaugePoint(t0)
+  const [x1, y1] = gaugePoint(t1)
+  return `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${GAUGE.R} ${GAUGE.R} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`
+}
+
+export function WinProbGauge({ value = 78, vs }: { value?: number; vs?: string }) {
+  const t = Math.min(1, Math.max(0, value / 100))
+  const bands = [
+    { from: 0, to: 0.4, color: "#f23b3b" },
+    { from: 0.4, to: 0.62, color: "#f5a524" },
+    { from: 0.62, to: 1, color: "#22c55e" },
+  ]
+  const [tx0, ty0] = gaugePoint(t, GAUGE.R - GAUGE.SW / 2 - 3)
+  const [tx1, ty1] = gaugePoint(t, GAUGE.R + GAUGE.SW / 2 + 3)
   return (
-    <ul className="space-y-2">
-      {powerRankings.slice(0, limit).map((p) => {
-        const delta = p.prev - p.rank
-        return (
-          <li key={p.team.id} className="flex items-center gap-3">
-            <span className="w-5 text-center text-lg font-bold tabular-nums text-muted-foreground">{p.rank}</span>
-            <span className="flex w-6 items-center justify-center">
-              {delta > 0 ? (
-                <span className="flex items-center text-xs text-success">
-                  <ArrowUp size={12} />
-                  {delta}
-                </span>
-              ) : delta < 0 ? (
-                <span className="flex items-center text-xs text-destructive">
-                  <ArrowDown size={12} />
-                  {Math.abs(delta)}
-                </span>
-              ) : (
-                <Minus size={12} className="text-muted-foreground" />
-              )}
+    <div className="flex flex-col items-center">
+      <svg viewBox="0 0 240 134" className="w-full max-w-[260px]" aria-hidden>
+        {/* track */}
+        <path d={gaugeArc(0, 1)} fill="none" stroke="var(--secondary)" strokeWidth={GAUGE.SW} strokeLinecap="round" />
+        {/* colored bands */}
+        {bands.map((b, i) => (
+          <path key={i} d={gaugeArc(b.from, b.to)} fill="none" stroke={b.color} strokeWidth={GAUGE.SW} />
+        ))}
+        {/* value tick */}
+        <line x1={tx0} y1={ty0} x2={tx1} y2={ty1} stroke="#fff" strokeWidth={3.5} strokeLinecap="round" />
+      </svg>
+      <div className="-mt-2 text-center">
+        <div className="text-xl font-bold tabular-nums text-success">{value}% to win</div>
+        {vs && <div className="text-xs text-muted-foreground">vs {vs}</div>}
+      </div>
+    </div>
+  )
+}
+
+/* ---------------- League banner hero (banner image + league icon + meta + stats) ---------------- */
+export function LeagueBanner({ league = userLeagues[0], className }: { league?: UserLeague; className?: string }) {
+  const me = standings[0]
+  const stats = [
+    { label: "My Rank", value: `#${league.myRank}`, icon: <DynamicIcon name="trophy" size={13} /> },
+    { label: "Record", value: league.record, icon: <Flame size={13} /> },
+    { label: "Points For", value: league.pointsFor, icon: <TrendingUp size={13} /> },
+    { label: "Teams", value: league.teams, icon: <UsersIcon size={13} /> },
+    { label: "Moves", value: me.moves, icon: <Repeat size={13} /> },
+  ]
+  return (
+    <div className={cn("relative overflow-hidden rounded-2xl border border-border bg-card", className)}>
+      <div className="relative h-24 w-full sm:h-28">
+        <Image src="/league-banner.png" alt="" fill priority className="object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/70 to-card/10" />
+        <div className="absolute right-3 top-3 flex gap-1.5">
+          <span className="rounded-full bg-background/70 px-2.5 py-1 text-[11px] font-semibold backdrop-blur">{league.format}</span>
+          <span className="rounded-full bg-background/70 px-2.5 py-1 text-[11px] font-semibold backdrop-blur">Week 7</span>
+        </div>
+      </div>
+      <div className="relative -mt-9 flex items-end gap-4 px-5">
+        <span className="rounded-2xl ring-4 ring-card">
+          <TeamAvatar seed={league.hue} label={league.name} size={60} className="rounded-2xl" />
+        </span>
+        <div className="flex-1 pb-1">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-bold tracking-tight">{league.name}</h2>
+            <Tag tone="primary">Active</Tag>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {league.format} · {league.teams} teams · Season 2026 · Week 7
+          </p>
+        </div>
+        <div className="hidden gap-2 pb-1 md:flex">
+          <button className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">
+            <Calendar size={14} /> Set Lineup
+          </button>
+          <button className="grid h-9 w-9 place-items-center rounded-lg border border-border text-muted-foreground hover:text-foreground" aria-label="League settings">
+            <Settings size={16} />
+          </button>
+        </div>
+      </div>
+      <div className="mt-3.5 grid grid-cols-2 gap-px overflow-hidden border-t border-border bg-border sm:grid-cols-3 lg:grid-cols-5">
+        {stats.map((s) => (
+          <div key={s.label} className="flex flex-col gap-0.5 bg-card px-5 py-2.5">
+            <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              {s.icon} {s.label}
             </span>
-            <TeamAvatar seed={p.team.avatar} label={p.team.name} size={30} />
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-medium">{p.team.name}</div>
-              <div className="truncate text-[11px] text-muted-foreground">{p.blurb}</div>
+            <span className="text-base font-bold tabular-nums">{s.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ---------------- League roster (starters + bench, with availability) ---------------- */
+const ROSTER_STATUS: Record<string, string> = {
+  active: "var(--success)",
+  questionable: "var(--warning)",
+  out: "var(--destructive)",
+  bye: "var(--muted-foreground)",
+}
+export function LeagueRoster({ limit = 9, starters = 6 }: { limit?: number; starters?: number }) {
+  const roster = players.slice(0, limit)
+  return (
+    <ul className="-my-1">
+      {roster.map((p, i) => (
+        <li
+          key={p.id}
+          className={cn("flex items-center gap-2.5 py-2", i === starters && "mt-1 border-t border-dashed border-border pt-3")}
+        >
+          <PositionPill pos={p.pos} className="w-10" />
+          <PlayerAvatar name={p.name} pos={p.pos} size={28} />
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-sm font-medium">{p.name}</div>
+            <div className="text-[11px] text-muted-foreground">
+              {i < starters ? "Starter" : "Bench"} · {p.team}
             </div>
-            <span className="rounded-md bg-secondary px-2 py-1 text-xs font-bold tabular-nums">{p.rating}</span>
-          </li>
-        )
-      })}
+          </div>
+          <span
+            className="h-2 w-2 shrink-0 rounded-full"
+            style={{ background: ROSTER_STATUS[p.status] ?? "var(--muted-foreground)" }}
+            title={p.status}
+          />
+          <span className="w-11 text-right text-sm font-bold tabular-nums">{p.points.toFixed(1)}</span>
+        </li>
+      ))}
     </ul>
   )
 }
 
-/* ---------------- Commissioner tools ---------------- */
-export function CommishTools() {
+/* ---------------- Injury / availability report ---------------- */
+const INJ_TONE: Record<string, "warning" | "destructive"> = {
+  questionable: "warning",
+  doubtful: "warning",
+  out: "destructive",
+  ir: "destructive",
+}
+export function InjuryReport({ limit }: { limit?: number }) {
+  const data = limit ? injuries.slice(0, limit) : injuries
   return (
-    <ul className="space-y-1.5">
-      {commishTasks.map((c) => (
-        <li key={c.id} className="flex items-center gap-3 rounded-lg border border-border bg-secondary/30 px-3 py-2.5">
-          <span
-            className={cn(
-              "grid h-7 w-7 place-items-center rounded-lg",
-              c.done ? "bg-success/15 text-success" : "bg-secondary text-muted-foreground",
-            )}
-          >
-            {c.done ? <CheckCircle2 size={15} /> : <Clock size={15} />}
-          </span>
+    <ul className="divide-y divide-border/60">
+      {data.map((p) => (
+        <li key={p.player} className="flex items-center gap-2.5 py-2">
+          <PlayerAvatar name={p.player} pos={p.pos} size={30} />
           <div className="min-w-0 flex-1">
-            <div className={cn("text-sm font-medium", c.done && "text-muted-foreground line-through")}>{c.label}</div>
-            <div className="truncate text-[11px] text-muted-foreground">{c.detail}</div>
+            <div className="flex items-center gap-1.5">
+              <span className="truncate text-sm font-medium">{p.player}</span>
+              <PositionPill pos={p.pos} />
+            </div>
+            <div className="truncate text-[11px] text-muted-foreground">
+              {p.team} · {p.note}
+            </div>
           </div>
-          {!c.done && (
-            <Tag tone={c.priority === "high" ? "destructive" : c.priority === "med" ? "warning" : "muted"}>
-              {c.priority}
-            </Tag>
-          )}
+          <Tag tone={INJ_TONE[p.status]} className="uppercase">
+            {p.status}
+          </Tag>
         </li>
       ))}
     </ul>
@@ -537,114 +551,97 @@ export function WeeklyAwards() {
   )
 }
 
-/* ---------------- Transactions ---------------- */
-const TX_TONE: Record<string, "success" | "destructive" | "info"> = {
-  add: "success",
-  drop: "destructive",
-  trade: "info",
-}
-export function Transactions({ limit }: { limit?: number }) {
-  const data = limit ? transactions.slice(0, limit) : transactions
-  return (
-    <ul className="space-y-1">
-      {data.map((t) => (
-        <li key={t.id} className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-secondary/40">
-          <Tag tone={TX_TONE[t.type]} className="uppercase">
-            {t.type}
-          </Tag>
-          <div className="min-w-0 flex-1">
-            <span className="text-sm font-medium">{t.player}</span>{" "}
-            <span className="text-xs text-muted-foreground">{t.detail}</span>
-            <div className="text-[11px] text-muted-foreground">{t.team}</div>
-          </div>
-          <span className="text-[11px] text-muted-foreground">{t.time}</span>
-        </li>
-      ))}
-    </ul>
-  )
+/* ---------------- Scoring heatmap (teams × weeks) ----------------
+   Discrete point buckets — cool (low) → warm (high). */
+const HEAT_BUCKETS = [
+  { max: 95, label: "<95", bg: "#1c2438", fg: "var(--muted-foreground)" },
+  { max: 110, label: "95–109", bg: "#3b5bd9", fg: "#fff" },
+  { max: 125, label: "110–124", bg: "#7c4ddb", fg: "#fff" },
+  { max: 140, label: "125–139", bg: "#c33a5e", fg: "#fff" },
+  { max: Number.POSITIVE_INFINITY, label: "140+", bg: "#f23b3b", fg: "#fff" },
+] as const
+
+function heatBucket(v: number) {
+  return HEAT_BUCKETS.find((b) => v < b.max) ?? HEAT_BUCKETS[HEAT_BUCKETS.length - 1]
 }
 
-/* ---------------- League banner hero (banner + league icon + meta + stats) ---------------- */
-export function LeagueBanner({
-  league = userLeagues[0],
-  tags = ["Keeper", "Dynasty"],
-  className,
+export function ScoringHeatmap({
+  weeks = HEATMAP_WEEKS,
+  limit = 8,
+  showLegend = true,
+  showAvg = false,
+  highlight = "t1",
 }: {
-  league?: UserLeague
-  tags?: string[]
-  className?: string
+  weeks?: number
+  limit?: number
+  showLegend?: boolean
+  showAvg?: boolean
+  highlight?: string
 }) {
-  const me = standings[0]
-  const stats = [
-    { label: "My Rank", value: `#${league.myRank}`, icon: <DynamicIcon name="trophy" size={13} /> },
-    { label: "Record", value: league.record, icon: <Flame size={13} /> },
-    { label: "Points For", value: league.pointsFor, icon: <TrendingUp size={13} /> },
-    { label: "Teams", value: league.teams, icon: <UsersIcon size={13} /> },
-    { label: "Moves", value: me.moves, icon: <Repeat size={13} /> },
-  ]
+  const rows = weeklyScores.slice(0, limit).map((r) => ({ ...r, weeks: r.weeks.slice(0, weeks) }))
+  const cols = `minmax(104px,1.2fr) repeat(${weeks}, minmax(0,1fr))${showAvg ? " 48px" : ""}`
+
   return (
-    <Panel className={cn("relative overflow-hidden", className)}>
-      <div className="relative h-32 w-full sm:h-36">
-        <Image src="/league-banner.png" alt="" fill priority className="object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/70 to-card/10" />
-        <div className="absolute right-3 top-3 flex gap-1.5">
-          {tags.map((t) => (
-            <span key={t} className="rounded-full bg-background/70 px-2.5 py-1 text-[11px] font-semibold backdrop-blur">
-              {t}
+    <div className="overflow-x-auto no-scrollbar">
+      <div className="min-w-[560px]">
+        {/* Header */}
+        <div className="grid items-center gap-1.5 pb-1.5 text-[10px] font-medium text-muted-foreground" style={{ gridTemplateColumns: cols }}>
+          <span className="pl-1">Team</span>
+          {Array.from({ length: weeks }).map((_, i) => (
+            <span key={i} className="text-center tabular-nums">
+              W{i + 1}
             </span>
           ))}
+          {showAvg && <span className="pr-1 text-right">Avg</span>}
         </div>
-      </div>
-      <div className="relative -mt-12 flex items-end gap-4 px-5">
-        <span className="rounded-2xl ring-4 ring-card">
-          <TeamAvatar seed={league.hue} label={league.name} size={72} className="rounded-2xl" />
-        </span>
-        <div className="flex-1 pb-1">
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold tracking-tight">{league.name}</h2>
-            <Tag tone="primary">Active</Tag>
+        {/* Rows */}
+        <div className="space-y-1.5">
+          {rows.map((r) => {
+            const avg = r.weeks.reduce((s, v) => s + v, 0) / r.weeks.length
+            return (
+              <div
+                key={r.team.id}
+                className={cn(
+                  "grid items-center gap-1.5 rounded-lg",
+                  r.team.id === highlight && "bg-primary/5 ring-1 ring-primary/30",
+                )}
+                style={{ gridTemplateColumns: cols }}
+              >
+                <div className="flex min-w-0 items-center gap-2 py-0.5 pl-1">
+                  <TeamAvatar seed={r.team.avatar} label={r.team.name} size={22} />
+                  <span className="truncate text-xs font-medium">{r.team.name}</span>
+                </div>
+                {r.weeks.map((v, i) => {
+                  const b = heatBucket(v)
+                  return (
+                    <div
+                      key={i}
+                      title={`${r.team.name} · W${i + 1}: ${v.toFixed(1)} pts`}
+                      className="grid h-7 place-items-center rounded-md text-[11px] font-bold tabular-nums"
+                      style={{ background: b.bg, color: b.fg }}
+                    >
+                      {Math.round(v)}
+                    </div>
+                  )
+                })}
+                {showAvg && <span className="pr-1 text-right text-xs font-bold tabular-nums">{avg.toFixed(0)}</span>}
+              </div>
+            )
+          })}
+        </div>
+        {showLegend && (
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10px] font-medium text-muted-foreground">
+            <span className="uppercase tracking-wide">Points</span>
+            {HEAT_BUCKETS.map((b) => (
+              <span key={b.label} className="inline-flex items-center gap-1.5">
+                <span className="h-3 w-5 rounded" style={{ background: b.bg }} />
+                {b.label}
+              </span>
+            ))}
           </div>
-          <p className="text-xs text-muted-foreground">
-            {league.format} · {league.teams} teams · Season 2026 · Week 7
-          </p>
-        </div>
-        <div className="hidden gap-2 pb-1 md:flex">
-          <button className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">
-            <Calendar size={14} /> Set Lineup
-          </button>
-          <button className="grid h-9 w-9 place-items-center rounded-lg border border-border text-muted-foreground hover:text-foreground" aria-label="League settings">
-            <Settings size={16} />
-          </button>
-        </div>
+        )}
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-px overflow-hidden border-t border-border bg-border sm:grid-cols-3 lg:grid-cols-5">
-        {stats.map((s) => (
-          <div key={s.label} className="flex flex-col gap-0.5 bg-card px-5 py-3">
-            <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              {s.icon} {s.label}
-            </span>
-            <span className="text-lg font-bold tabular-nums">{s.value}</span>
-          </div>
-        ))}
-      </div>
-    </Panel>
+    </div>
   )
 }
 
-/* ---------------- Trend pill ---------------- */
-export function TrendPill({ value, className }: { value: number; className?: string }) {
-  const up = value >= 0
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-0.5 text-xs font-semibold tabular-nums",
-        up ? "text-success" : "text-destructive",
-        className,
-      )}
-    >
-      {up ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-      {up ? "+" : ""}
-      {value}
-    </span>
-  )
-}

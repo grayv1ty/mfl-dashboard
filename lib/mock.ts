@@ -54,21 +54,37 @@ export interface Player {
   proj: number
   status: "active" | "questionable" | "out" | "bye"
   trend: number // weekly point delta
+  /** Owning team id (see `standings`), or undefined when the player is a free agent. */
+  owner?: string
 }
 
 export const players: Player[] = [
-  { id: "p1", name: "Ja'Marr Chase", pos: "WR", team: "CIN", adp: 1, points: 28.4, proj: 21.2, status: "active", trend: 6.1 },
-  { id: "p2", name: "Saquon Barkley", pos: "RB", team: "PHI", adp: 2, points: 24.9, proj: 19.8, status: "active", trend: 4.2 },
-  { id: "p3", name: "Justin Jefferson", pos: "WR", team: "MIN", adp: 3, points: 22.1, proj: 20.4, status: "active", trend: -1.3 },
-  { id: "p4", name: "Bijan Robinson", pos: "RB", team: "ATL", adp: 4, points: 19.7, proj: 18.1, status: "active", trend: 2.0 },
-  { id: "p5", name: "CeeDee Lamb", pos: "WR", team: "DAL", adp: 5, points: 18.3, proj: 17.9, status: "questionable", trend: -0.8 },
-  { id: "p6", name: "Patrick Mahomes", pos: "QB", team: "KC", adp: 6, points: 24.6, proj: 22.7, status: "active", trend: 3.4 },
-  { id: "p7", name: "Travis Etienne", pos: "RB", team: "JAC", adp: 18, points: 14.2, proj: 13.0, status: "questionable", trend: -2.1 },
-  { id: "p8", name: "Travis Kelce", pos: "TE", team: "KC", adp: 12, points: 16.8, proj: 15.2, status: "active", trend: 1.1 },
-  { id: "p9", name: "Tyreek Hill", pos: "WR", team: "MIA", adp: 7, points: 9.4, proj: 18.6, status: "active", trend: -9.0 },
-  { id: "p10", name: "Josh Allen", pos: "QB", team: "BUF", adp: 9, points: 26.1, proj: 23.4, status: "active", trend: 2.7 },
-  { id: "p11", name: "Kenneth Walker III", pos: "RB", team: "SEA", adp: 31, points: 12.6, proj: 11.8, status: "active", trend: 0.8 },
-  { id: "p12", name: "Amon-Ra St. Brown", pos: "WR", team: "DET", adp: 8, points: 17.5, proj: 16.9, status: "active", trend: 0.6 },
+  { id: "p1", name: "Ja'Marr Chase", pos: "WR", team: "CIN", adp: 1, points: 28.4, proj: 21.2, status: "active", trend: 6.1, owner: "t1" },
+  { id: "p2", name: "Saquon Barkley", pos: "RB", team: "PHI", adp: 2, points: 24.9, proj: 19.8, status: "active", trend: 4.2, owner: "t1" },
+  { id: "p3", name: "Justin Jefferson", pos: "WR", team: "MIN", adp: 3, points: 22.1, proj: 20.4, status: "active", trend: -1.3, owner: "t2" },
+  { id: "p4", name: "Bijan Robinson", pos: "RB", team: "ATL", adp: 4, points: 19.7, proj: 18.1, status: "active", trend: 2.0, owner: "t3" },
+  { id: "p5", name: "CeeDee Lamb", pos: "WR", team: "DAL", adp: 5, points: 18.3, proj: 17.9, status: "questionable", trend: -0.8, owner: "t2" },
+  { id: "p6", name: "Patrick Mahomes", pos: "QB", team: "KC", adp: 6, points: 24.6, proj: 22.7, status: "active", trend: 3.4, owner: "t4" },
+  { id: "p7", name: "Travis Etienne", pos: "RB", team: "JAC", adp: 18, points: 14.2, proj: 13.0, status: "questionable", trend: -2.1, owner: "t1" },
+  { id: "p8", name: "Travis Kelce", pos: "TE", team: "KC", adp: 12, points: 16.8, proj: 15.2, status: "active", trend: 1.1, owner: "t5" },
+  { id: "p9", name: "Tyreek Hill", pos: "WR", team: "MIA", adp: 7, points: 9.4, proj: 18.6, status: "active", trend: -9.0, owner: "t3" },
+  { id: "p10", name: "Josh Allen", pos: "QB", team: "BUF", adp: 9, points: 26.1, proj: 23.4, status: "active", trend: 2.7, owner: "t1" },
+  { id: "p11", name: "Kenneth Walker III", pos: "RB", team: "SEA", adp: 31, points: 12.6, proj: 11.8, status: "active", trend: 0.8, owner: "t6" },
+  { id: "p12", name: "Amon-Ra St. Brown", pos: "WR", team: "DET", adp: 8, points: 17.5, proj: 16.9, status: "active", trend: 0.6, owner: "t2" },
+  // ---- Free agents (no owner) — the waiver wire ----
+  { id: "p13", name: "Jaylen Warren", pos: "RB", team: "PIT", adp: 64, points: 11.3, proj: 10.4, status: "active", trend: 3.2 },
+  { id: "p14", name: "Jakobi Meyers", pos: "WR", team: "LV", adp: 71, points: 10.8, proj: 11.6, status: "active", trend: 1.9 },
+  { id: "p15", name: "Baker Mayfield", pos: "QB", team: "TB", adp: 58, points: 18.9, proj: 17.4, status: "active", trend: 2.3 },
+  { id: "p16", name: "Tucker Kraft", pos: "TE", team: "GB", adp: 96, points: 9.1, proj: 8.8, status: "active", trend: 1.4 },
+  { id: "p17", name: "Tyrone Tracy Jr.", pos: "RB", team: "NYG", adp: 88, points: 8.7, proj: 9.6, status: "questionable", trend: -0.5 },
+  { id: "p18", name: "Brandon Aubrey", pos: "K", team: "DAL", adp: 110, points: 12.0, proj: 9.5, status: "active", trend: 0.7 },
+  { id: "p19", name: "Cameron Dicker", pos: "K", team: "LAC", adp: 142, points: 9.0, proj: 8.6, status: "active", trend: -0.3 },
+  { id: "p20", name: "Texans D/ST", pos: "DEF", team: "HOU", adp: 128, points: 11.0, proj: 7.8, status: "active", trend: 2.1 },
+  { id: "p21", name: "Broncos D/ST", pos: "DEF", team: "DEN", adp: 121, points: 13.0, proj: 8.4, status: "active", trend: 4.0 },
+  // ---- A few more rostered players for depth ----
+  { id: "p22", name: "Jahmyr Gibbs", pos: "RB", team: "DET", adp: 10, points: 20.4, proj: 18.7, status: "active", trend: 1.6, owner: "t4" },
+  { id: "p23", name: "Sam LaPorta", pos: "TE", team: "DET", adp: 22, points: 12.9, proj: 13.1, status: "active", trend: -0.4, owner: "t7" },
+  { id: "p24", name: "Jared Goff", pos: "QB", team: "DET", adp: 41, points: 19.2, proj: 18.0, status: "active", trend: 0.9, owner: "t8" },
 ]
 
 /* ---------- Player headshots (mflimages) ----------
@@ -252,6 +268,23 @@ export const news: NewsItem[] = [
   { id: "n5", player: "Tyreek Hill", team: "MIA", pos: "WR", headline: "Quiet day, season-low targets", source: "ESPN", time: "5h ago" },
 ]
 
+/* ---------- Injury / availability report ---------- */
+export interface InjuryItem {
+  player: string
+  pos: Position
+  team: string
+  status: "questionable" | "doubtful" | "out" | "ir"
+  note: string
+}
+
+export const injuries: InjuryItem[] = [
+  { player: "Tyreek Hill", pos: "WR", team: "MIA", status: "questionable", note: "Wrist · limited Wed" },
+  { player: "Travis Etienne", pos: "RB", team: "JAC", status: "doubtful", note: "Knee · DNP Thu" },
+  { player: "CeeDee Lamb", pos: "WR", team: "DAL", status: "questionable", note: "Ankle · game-time decision" },
+  { player: "Mark Andrews", pos: "TE", team: "BAL", status: "out", note: "Illness · ruled out" },
+  { player: "Christian McCaffrey", pos: "RB", team: "SF", status: "ir", note: "Achilles · out 3 weeks" },
+]
+
 export interface NotificationItem {
   id: string
   text: string
@@ -266,6 +299,41 @@ export const notifications: NotificationItem[] = [
   { id: "no3", text: "alice proposed a trade in Dynasty Warlords.", time: "1d ago", unread: false, kind: "trade" },
   { id: "no4", text: "Your draft for The Gridiron Society starts in 2 days.", time: "1d ago", unread: false, kind: "system" },
 ]
+
+/* ---------- Action queue (cross-league to-dos) ---------- */
+export interface ActionItem {
+  id: string
+  label: string
+  league: string
+  hue: string
+  urgent: boolean
+}
+
+export const actionQueue: ActionItem[] = [
+  { id: "q1", label: "Set lineup", league: "The Gridiron Society", hue: "152", urgent: true },
+  { id: "q2", label: "Respond to trade", league: "Dynasty Warlords", hue: "26", urgent: true },
+  { id: "q3", label: "Claim waiver", league: "College Buds", hue: "95", urgent: false },
+  { id: "q4", label: "Confirm keepers", league: "Office League '26", hue: "320", urgent: false },
+]
+
+/* ---------- Manager skill ratings (FUT-style attributes) ---------- */
+export interface ManagerAttribute {
+  key: string
+  label: string
+  value: number
+}
+
+export const managerAttributes: ManagerAttribute[] = [
+  { key: "DRF", label: "Drafting", value: 94 },
+  { key: "TRD", label: "Trading", value: 88 },
+  { key: "WVR", label: "Waivers", value: 91 },
+  { key: "LIN", label: "Lineups", value: 86 },
+  { key: "CLU", label: "Clutch", value: 79 },
+  { key: "LCK", label: "Luck", value: 62 },
+]
+
+/* ---------- Recent form (last games, newest last) ---------- */
+export const recentForm: ("W" | "L")[] = ["W", "L", "W", "W", "W", "W"]
 
 export interface Achievement {
   id: string
@@ -439,9 +507,188 @@ export const seasonTrend = [
   { week: "W6", wins: 4, pf: 467 },
 ]
 
+/* ---------- Weekly scoring heatmap (teams × weeks) ----------
+   Deterministic pseudo-random points so the heatmap is stable across renders. */
+export interface TeamWeeks {
+  team: Team
+  weeks: number[]
+}
+
+export const HEATMAP_WEEKS = 11
+
+export const weeklyScores: TeamWeeks[] = standings.map((team, ti) => ({
+  team,
+  weeks: Array.from({ length: HEATMAP_WEEKS }, (_, wi) => {
+    const seed = Math.sin((ti + 1) * 12.9898 + (wi + 1) * 78.233) * 43758.5453
+    const frac = seed - Math.floor(seed)
+    // Bias higher-ranked teams slightly upward; range ~68–148.
+    const base = 92 + (standings.length - team.rank) * 1.6
+    return Math.round((base + (frac - 0.5) * 70) * 10) / 10
+  }),
+}))
+
 export const upcomingEvents = [
   { id: "ev1", title: "Waivers process", league: "Dynasty Warlords", when: "Wed 3:00 AM", kind: "waiver" },
   { id: "ev2", title: "Trade deadline", league: "Office League '26", when: "Nov 14", kind: "deadline" },
   { id: "ev3", title: "Draft night", league: "The Gridiron Society", when: "in 2d 4h", kind: "draft" },
   { id: "ev4", title: "Playoffs begin", league: "Scott Fish Bowl", when: "Week 15", kind: "playoff" },
 ]
+
+/* ------------------------------------------------------------------ *
+ * NFL scoreboard — powers the Scores page (box score + matches rail).
+ * One real Week-1 slate; box scores are exact for the featured game and
+ * deterministically generated for the rest so any game can be opened.
+ * ------------------------------------------------------------------ */
+export const nflTeamNames: Record<string, string> = {
+  DAL: "Dallas Cowboys", PHI: "Philadelphia Eagles", KC: "Kansas City Chiefs",
+  LAC: "Los Angeles Chargers", TB: "Tampa Bay Buccaneers", ATL: "Atlanta Falcons",
+  CIN: "Cincinnati Bengals", CLE: "Cleveland Browns", MIA: "Miami Dolphins",
+  IND: "Indianapolis Colts", CAR: "Carolina Panthers", JAC: "Jacksonville Jaguars",
+  LV: "Las Vegas Raiders", NE: "New England Patriots", ARI: "Arizona Cardinals",
+  NO: "New Orleans Saints", PIT: "Pittsburgh Steelers", NYJ: "New York Jets",
+  NYG: "New York Giants", WAS: "Washington Commanders",
+}
+
+/** Starters used to populate generated box scores. */
+const teamSkill: Record<string, { qb: string; rbs: string[] }> = {
+  DAL: { qb: "Dak Prescott", rbs: ["Javonte Williams", "Miles Sanders"] },
+  PHI: { qb: "Jalen Hurts", rbs: ["Saquon Barkley", "Will Shipley"] },
+  KC: { qb: "Patrick Mahomes", rbs: ["Isiah Pacheco", "Kareem Hunt"] },
+  LAC: { qb: "Justin Herbert", rbs: ["Najee Harris", "Omarion Hampton"] },
+  TB: { qb: "Baker Mayfield", rbs: ["Bucky Irving", "Rachaad White"] },
+  ATL: { qb: "Michael Penix Jr.", rbs: ["Bijan Robinson", "Tyler Allgeier"] },
+  CIN: { qb: "Joe Burrow", rbs: ["Chase Brown", "Samaje Perine"] },
+  CLE: { qb: "Joe Flacco", rbs: ["Quinshon Judkins", "Jerome Ford"] },
+  MIA: { qb: "Tua Tagovailoa", rbs: ["De'Von Achane", "Jaylen Wright"] },
+  IND: { qb: "Daniel Jones", rbs: ["Jonathan Taylor", "Tyler Goodson"] },
+  CAR: { qb: "Bryce Young", rbs: ["Chuba Hubbard", "Rico Dowdle"] },
+  JAC: { qb: "Trevor Lawrence", rbs: ["Travis Etienne", "Tank Bigsby"] },
+  LV: { qb: "Geno Smith", rbs: ["Ashton Jeanty", "Raheem Mostert"] },
+  NE: { qb: "Drake Maye", rbs: ["Rhamondre Stevenson", "TreVeyon Henderson"] },
+  ARI: { qb: "Kyler Murray", rbs: ["James Conner", "Trey Benson"] },
+  NO: { qb: "Spencer Rattler", rbs: ["Alvin Kamara", "Kendre Miller"] },
+  PIT: { qb: "Aaron Rodgers", rbs: ["Jaylen Warren", "Kaleb Johnson"] },
+  NYJ: { qb: "Justin Fields", rbs: ["Breece Hall", "Braelon Allen"] },
+  NYG: { qb: "Russell Wilson", rbs: ["Tyrone Tracy Jr.", "Devin Singletary"] },
+  WAS: { qb: "Jayden Daniels", rbs: ["Brian Robinson Jr.", "Austin Ekeler"] },
+}
+
+export interface PassRow {
+  name: string; pos: string; att: number; comp: number; yds: number; avg: number; td: number; int: number; sk: number; fd: number
+}
+export interface RushRow {
+  name: string; pos: string; rush: number; yds: number; avg: number; td: number; long: number; fd: number
+}
+export interface BoxScore {
+  passing: { away: PassRow[]; home: PassRow[] }
+  rushing: { away: RushRow[]; home: RushRow[] }
+}
+export interface ScoreSide { abbr: string; record: string; score: number; quarters: number[] }
+export interface ScoreGame { id: string; away: ScoreSide; home: ScoreSide; day: string; time: string; status: GameStatus }
+
+const round1 = (n: number) => Math.round(n * 10) / 10
+function seedFrom(s: string): number {
+  let h = 7
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0
+  return h
+}
+
+/** Split a final score across four quarters, summing exactly. */
+function splitQuarters(score: number, seed: number): number[] {
+  if (score <= 0) return [0, 0, 0, 0]
+  const w = [seed % 3, (seed >> 2) % 4, (seed >> 4) % 3]
+  const total = w[0] + w[1] + w[2] + 1
+  const q = [0, 0, 0, 0]
+  let rem = score
+  for (let i = 0; i < 3; i++) {
+    q[i] = Math.min(rem, Math.round((score * w[i]) / total))
+    rem -= q[i]
+  }
+  q[3] = rem
+  return q
+}
+
+const WEEK1_SCORES: [string, number, string, number][] = [
+  ["DAL", 20, "PHI", 24], ["KC", 21, "LAC", 27], ["TB", 23, "ATL", 20],
+  ["CIN", 17, "CLE", 16], ["MIA", 8, "IND", 33], ["CAR", 10, "JAC", 26],
+  ["LV", 20, "NE", 13], ["ARI", 20, "NO", 13], ["PIT", 34, "NYJ", 32],
+  ["NYG", 6, "WAS", 21],
+]
+const WEEK1_SLOTS: [string, string][] = [
+  ["THU", "7:20 PM"], ["FRI", "7:00 PM"], ["SUN", "12:00 PM"], ["SUN", "12:00 PM"],
+  ["SUN", "12:00 PM"], ["SUN", "12:00 PM"], ["SUN", "12:00 PM"], ["SUN", "12:00 PM"],
+  ["SUN", "1:00 PM"], ["SUN", "1:00 PM"],
+]
+
+/** Exact quarter splits for the featured game; others are generated. */
+const EXACT_QUARTERS: Record<string, { away: number[]; home: number[] }> = {
+  "nfl-1": { away: [7, 13, 0, 0], home: [7, 14, 3, 0] },
+}
+
+export const scoreboard: ScoreGame[] = WEEK1_SCORES.map(([a, as, h, hs], i) => {
+  const id = `nfl-${i + 1}`
+  const exact = EXACT_QUARTERS[id]
+  return {
+    id,
+    away: { abbr: a, record: "0-0", score: as, quarters: exact?.away ?? splitQuarters(as, seedFrom(id + a)) },
+    home: { abbr: h, record: "0-0", score: hs, quarters: exact?.home ?? splitQuarters(hs, seedFrom(id + h)) },
+    day: WEEK1_SLOTS[i][0],
+    time: WEEK1_SLOTS[i][1],
+    status: "final",
+  }
+})
+
+function genPass(abbr: string, score: number, seed: number): PassRow[] {
+  const qb = teamSkill[abbr]?.qb ?? `${abbr} QB`
+  const att = 26 + (seed % 14)
+  const comp = Math.max(11, Math.round(att * (0.56 + (seed % 14) / 100)))
+  const yds = 150 + score * 4 + (seed % 60)
+  return [{ name: qb, pos: "QB", att, comp, yds, avg: round1(yds / att), td: score >= 24 ? 3 : score >= 17 ? 2 : score >= 10 ? 1 : 0, int: seed % 4 === 0 ? 1 : 0, sk: (seed >> 3) % 3, fd: Math.round(yds / 20) }]
+}
+
+function genRush(abbr: string, score: number, seed: number): RushRow[] {
+  const sk = teamSkill[abbr]
+  const qb = sk?.qb ?? `${abbr} QB`
+  const rb1 = sk?.rbs[0] ?? `${abbr} RB1`
+  const rb2 = sk?.rbs[1] ?? `${abbr} RB2`
+  const qbR = 2 + (seed % 6), qbY = 6 + (seed % 36)
+  const r1R = 12 + (seed % 9), r1Y = 38 + score + (seed % 36)
+  const r2R = 4 + ((seed >> 2) % 6), r2Y = 12 + ((seed >> 1) % 30)
+  return [
+    { name: qb, pos: "QB", rush: qbR, yds: qbY, avg: round1(qbY / qbR), td: score >= 24 ? 1 : 0, long: 0, fd: Math.round(qbY / 12) },
+    { name: rb1, pos: "RB", rush: r1R, yds: r1Y, avg: round1(r1Y / r1R), td: score >= 13 ? 1 : 0, long: 0, fd: Math.round(r1Y / 15) },
+    { name: rb2, pos: "RB", rush: r2R, yds: r2Y, avg: round1(r2Y / r2R), td: 0, long: 0, fd: Math.round(r2Y / 18) },
+  ]
+}
+
+/* Exact box score for the featured game, matching the reference design. */
+const FEATURED_BOX: BoxScore = {
+  passing: {
+    away: [{ name: "Dak Prescott", pos: "QB", att: 34, comp: 21, yds: 188, avg: 5.5, td: 0, int: 0, sk: 0, fd: 9 }],
+    home: [{ name: "Jalen Hurts", pos: "QB", att: 23, comp: 19, yds: 152, avg: 6.6, td: 0, int: 0, sk: 1, fd: 6 }],
+  },
+  rushing: {
+    away: [
+      { name: "Kavontae Turpin", pos: "WR", rush: 2, yds: 9, avg: 4.5, td: 0, long: 0, fd: 1 },
+      { name: "Javonte Williams", pos: "RB", rush: 15, yds: 54, avg: 3.6, td: 2, long: 0, fd: 5 },
+      { name: "Dak Prescott", pos: "QB", rush: 1, yds: 3, avg: 3, td: 0, long: 0, fd: 0 },
+      { name: "Miles Sanders", pos: "RB", rush: 4, yds: 59, avg: 14.8, td: 0, long: 0, fd: 1 },
+    ],
+    home: [
+      { name: "Jalen Hurts", pos: "QB", rush: 17, yds: 53, avg: 3.1, td: 2, long: 0, fd: 7 },
+      { name: "Saquon Barkley", pos: "RB", rush: 18, yds: 60, avg: 3.3, td: 1, long: 0, fd: 4 },
+      { name: "Will Shipley", pos: "RB", rush: 3, yds: 26, avg: 8.7, td: 0, long: 0, fd: 2 },
+      { name: "Aj Dillon", pos: "RB", rush: 3, yds: 10, avg: 3.3, td: 0, long: 0, fd: 1 },
+    ],
+  },
+}
+
+export function getBoxScore(game: ScoreGame): BoxScore {
+  if (game.id === "nfl-1") return FEATURED_BOX
+  const sa = seedFrom(game.id + game.away.abbr)
+  const sh = seedFrom(game.id + game.home.abbr)
+  return {
+    passing: { away: genPass(game.away.abbr, game.away.score, sa), home: genPass(game.home.abbr, game.home.score, sh) },
+    rushing: { away: genRush(game.away.abbr, game.away.score, sa), home: genRush(game.home.abbr, game.home.score, sh) },
+  }
+}

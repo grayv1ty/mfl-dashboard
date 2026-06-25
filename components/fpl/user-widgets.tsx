@@ -1,10 +1,35 @@
-import type { ReactNode } from "react"
-import Image from "next/image"
 import { cn } from "@/lib/utils"
-import { userLeagues, userProfile, achievements, type UserLeague } from "@/lib/mock"
-import { Panel, TeamAvatar, Tag, Progress } from "./primitives"
+import {
+  achievements,
+  actionQueue,
+  managerAttributes,
+  recentForm,
+  notifications,
+  players,
+  seasonTrend,
+  type UserLeague,
+} from "@/lib/mock"
+import { Panel, TeamAvatar, Tag, Progress, PlayerAvatar, Sparkline } from "./primitives"
 import { DynamicIcon } from "./icon"
-import { Circle, ChevronRight, Trophy, Flame, Star, Settings, Share2 } from "lucide-react"
+import {
+  Circle,
+  ChevronRight,
+  Trophy,
+  Clipboard,
+  Bell,
+  ShoppingCart,
+  AlertTriangle,
+  Repeat,
+  TrendingUp,
+  CheckCircle2,
+  Plus,
+  Sparkles,
+  Lock,
+  Swords,
+  BarChart3,
+} from "lucide-react"
+
+const NOTI_ICON = { waiver: ShoppingCart, injury: AlertTriangle, trade: Repeat, system: Bell }
 
 const TIER_COLOR: Record<string, string> = {
   bronze: "oklch(0.62 0.1 55)",
@@ -37,106 +62,6 @@ export function BadgeRail({ limit, showLabels = false }: { limit?: number; showL
         </div>
       ))}
     </div>
-  )
-}
-
-/* Full profile banner: banner image + avatar + identity + level + badges + stats */
-export function UserBanner({ className }: { className?: string }) {
-  const leading = userLeagues.filter((l) => l.leading).length
-  const pct = Math.round((userProfile.xp / userProfile.xpToNext) * 100)
-  const stats = [
-    { label: "Leagues", value: userProfile.leaguesJoined, icon: <Trophy size={13} /> },
-    { label: "Leading", value: `${leading}/${userLeagues.length}`, icon: <Star size={13} /> },
-    { label: "Win Rate", value: `${userProfile.winRate}%`, icon: <Flame size={13} /> },
-    { label: "Titles", value: userProfile.championships, icon: <DynamicIcon name="crown" size={13} /> },
-    { label: "Streak", value: userProfile.currentStreak, icon: <Flame size={13} /> },
-  ]
-  return (
-    <Panel className={cn("relative overflow-hidden", className)}>
-      <div className="relative h-32 w-full sm:h-40">
-        <Image src="/user-banner.png" alt="" fill priority className="object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-card/10" />
-        <div className="absolute right-3 top-3 flex gap-1.5">
-          <button className="inline-flex items-center gap-1.5 rounded-lg bg-background/70 px-2.5 py-1.5 text-xs font-medium backdrop-blur hover:text-foreground" aria-label="Share profile">
-            <Share2 size={13} /> Share
-          </button>
-          <button className="grid h-8 w-8 place-items-center rounded-lg bg-background/70 backdrop-blur" aria-label="Edit profile">
-            <Settings size={14} />
-          </button>
-        </div>
-      </div>
-      <div className="relative -mt-14 flex flex-col gap-4 px-5 pb-5 sm:flex-row sm:items-end">
-        <span className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl ring-4 ring-card">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/user-avatar.png" alt="grayson" className="h-full w-full object-cover" />
-        </span>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-bold tracking-tight">{userProfile.name}</h2>
-            <Tag tone="primary">Lv {userProfile.level}</Tag>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {userProfile.handle} · {userProfile.rank}
-          </p>
-          <div className="mt-2 max-w-xs">
-            <div className="mb-1 flex items-center justify-between text-[11px] text-muted-foreground">
-              <span>Level {userProfile.level}</span>
-              <span className="tabular-nums">
-                {userProfile.xp.toLocaleString()} / {userProfile.xpToNext.toLocaleString()} XP
-              </span>
-            </div>
-            <Progress value={pct} className="h-2" />
-          </div>
-        </div>
-        <div className="pb-1">
-          <BadgeRail limit={8} />
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-px overflow-hidden border-t border-border bg-border sm:grid-cols-3 lg:grid-cols-5">
-        {stats.map((s) => (
-          <div key={s.label} className="flex flex-col gap-0.5 bg-card px-5 py-3">
-            <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              {s.icon} {s.label}
-            </span>
-            <span className="text-lg font-bold tabular-nums">{s.value}</span>
-          </div>
-        ))}
-      </div>
-    </Panel>
-  )
-}
-
-/* KPI tile with optional trend + sparkline slot */
-export function Kpi({
-  label,
-  value,
-  delta,
-  sub,
-  icon,
-  className,
-}: {
-  label: string
-  value: ReactNode
-  delta?: string
-  sub?: ReactNode
-  icon?: ReactNode
-  className?: string
-}) {
-  const up = delta?.startsWith("+")
-  return (
-    <Panel className={cn("p-5", className)}>
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-muted-foreground">{label}</span>
-        {icon && <span className="text-muted-foreground">{icon}</span>}
-      </div>
-      <div className="mt-2 flex items-end gap-2">
-        <span className="text-3xl font-bold tracking-tight tabular-nums">{value}</span>
-        {delta && (
-          <span className={cn("mb-1 text-xs font-semibold", up ? "text-success" : "text-destructive")}>{delta}</span>
-        )}
-      </div>
-      {sub && <div className="mt-1 text-xs text-muted-foreground">{sub}</div>}
-    </Panel>
   )
 }
 
@@ -207,66 +132,219 @@ export function LeagueCard({ league, className }: { league: UserLeague; classNam
   )
 }
 
-/* Compact one-line league row */
-export function LeagueRow({ league }: { league: UserLeague }) {
-  const live = league.matchupStatus === "live"
+/* Cross-league to-do queue */
+export function ActionQueue({ limit }: { limit?: number }) {
+  const items = limit ? actionQueue.slice(0, limit) : actionQueue
   return (
-    <div className="flex items-center gap-3 rounded-xl px-2 py-2.5 hover:bg-secondary/50">
-      <TeamAvatar seed={league.hue} label={league.name} size={34} />
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-medium">{league.name}</div>
-        <div className="text-[11px] text-muted-foreground">
-          {league.format} · #{league.myRank} · {league.record}
-        </div>
-      </div>
-      {live ? (
-        <div className="text-right">
-          <div className="text-sm font-bold tabular-nums">
-            {league.myScore.toFixed(1)} <span className="text-muted-foreground">- {league.oppScore.toFixed(1)}</span>
-          </div>
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary">
-            <Circle size={5} className="animate-pulse fill-current" /> LIVE
-          </span>
-        </div>
-      ) : league.draftIn ? (
-        <Tag tone="info">Draft {league.draftIn}</Tag>
-      ) : (
-        <Tag tone={league.leading ? "success" : "muted"}>#{league.myRank}</Tag>
-      )}
-    </div>
-  )
-}
-
-/* Profile summary block reused in several concepts */
-export function ProfileStats({ columns = 2 }: { columns?: number }) {
-  const leading = userLeagues.filter((l) => l.leading).length
-  const stats = [
-    { label: "Leagues", value: userLeagues.length },
-    { label: "Leading", value: `${leading}/${userLeagues.length}` },
-    { label: "Win rate", value: "65%" },
-    { label: "Titles", value: 3 },
-  ]
-  return (
-    <div className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0,1fr))` }}>
-      {stats.map((s) => (
-        <div key={s.label} className="rounded-xl bg-secondary/50 px-3 py-3 text-center">
-          <div className="text-xl font-bold tabular-nums">{s.value}</div>
-          <div className="mt-0.5 text-[11px] text-muted-foreground">{s.label}</div>
-        </div>
+    <ul className="-mx-1">
+      {items.map((a) => (
+        <li key={a.id}>
+          <button className="flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left hover:bg-secondary/60">
+            <span
+              className={cn(
+                "grid h-7 w-7 place-items-center rounded-lg",
+                a.urgent ? "bg-warning/15 text-warning" : "bg-secondary text-muted-foreground",
+              )}
+            >
+              <Clipboard size={14} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-medium">{a.label}</div>
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <TeamAvatar seed={a.hue} label={a.league} size={14} /> <span className="truncate">{a.league}</span>
+              </div>
+            </div>
+            {a.urgent && <Tag tone="destructive">Now</Tag>}
+            <ChevronRight size={15} className="text-muted-foreground" />
+          </button>
+        </li>
       ))}
-    </div>
+    </ul>
   )
 }
 
-/* Level / XP progress bar */
-export function LevelBar() {
+/* Onboarding checklist — guides new users through setup */
+const ONBOARDING_STEPS = [
+  { id: "league", label: "Create or join a league", done: true },
+  { id: "mock", label: "Run a mock draft", done: false },
+  { id: "watchlist", label: "Build your watchlist", done: false },
+  { id: "profile", label: "Complete your profile", done: true },
+  { id: "customize", label: "Customize your dashboard", done: false },
+]
+
+export function GetStarted() {
+  const done = ONBOARDING_STEPS.filter((s) => s.done).length
+  const pct = Math.round((done / ONBOARDING_STEPS.length) * 100)
   return (
     <div>
-      <div className="mb-1.5 flex items-center justify-between text-xs">
-        <span className="font-medium">Level 24 · Elite Manager</span>
-        <span className="text-muted-foreground tabular-nums">7,400 / 10,000 XP</span>
+      <div className="mb-2 flex items-center justify-between text-xs">
+        <span className="text-muted-foreground">
+          {done} of {ONBOARDING_STEPS.length} complete
+        </span>
+        <span className="font-semibold tabular-nums text-primary">{pct}%</span>
       </div>
-      <Progress value={74} className="h-2" />
+      <Progress value={pct} className="mb-3 h-2" />
+      <ul className="space-y-1.5">
+        {ONBOARDING_STEPS.map((s) => (
+          <li
+            key={s.id}
+            className="flex items-center gap-3 rounded-lg border border-border bg-secondary/30 px-3 py-2.5"
+          >
+            {s.done ? (
+              <CheckCircle2 size={18} className="shrink-0 text-success" />
+            ) : (
+              <Circle size={18} className="shrink-0 text-muted-foreground/50" />
+            )}
+            <span className={cn("flex-1 text-sm font-medium", s.done && "text-muted-foreground line-through")}>
+              {s.label}
+            </span>
+            {!s.done && (
+              <button className="inline-flex items-center gap-0.5 text-xs font-semibold text-primary hover:opacity-80">
+                Start <ChevronRight size={13} />
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+/* Quick-start actions + premium feature teaser */
+const PREMIUM_FEATURES = [
+  { icon: BarChart3, label: "Advanced analytics", desc: "Deep weekly & season trends" },
+  { icon: Repeat, label: "AI trade analyzer", desc: "Grade any trade instantly" },
+  { icon: Trophy, label: "Dynasty rankings", desc: "Live values + rookie picks" },
+]
+
+export function UnlockFeatures() {
+  return (
+    <div>
+      <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <button className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90">
+          <Plus size={15} /> Create league
+        </button>
+        <button className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-secondary">
+          <Swords size={15} /> Run mock draft
+        </button>
+      </div>
+      <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
+        <div className="mb-2.5 flex items-center gap-2">
+          <Sparkles size={15} className="text-primary" />
+          <span className="text-sm font-semibold">Unlock with Premium</span>
+        </div>
+        <ul className="space-y-2.5">
+          {PREMIUM_FEATURES.map((f) => (
+            <li key={f.label} className="flex items-center gap-2.5">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-secondary text-muted-foreground">
+                <f.icon size={15} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-medium">{f.label}</div>
+                <div className="truncate text-[11px] text-muted-foreground">{f.desc}</div>
+              </div>
+              <Lock size={14} className="shrink-0 text-muted-foreground" />
+            </li>
+          ))}
+        </ul>
+        <button className="mt-3 w-full rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">
+          Go Premium
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* Notification / alerts list */
+export function AlertsList({ limit }: { limit?: number }) {
+  const items = limit ? notifications.slice(0, limit) : notifications
+  return (
+    <ul>
+      {items.map((n) => {
+        const Icon = NOTI_ICON[n.kind]
+        return (
+          <li key={n.id} className="flex items-start gap-3 border-b border-border/60 py-2.5 last:border-0">
+            <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-secondary text-muted-foreground">
+              <Icon size={14} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm leading-snug">{n.text}</p>
+              <span className="text-[11px] text-muted-foreground">{n.time}</span>
+            </div>
+            {n.unread && <Circle size={7} className="mt-1 shrink-0 fill-primary text-primary" />}
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+/* Trending players by points momentum */
+export function TrendingPlayers({ limit = 6 }: { limit?: number }) {
+  return (
+    <ul>
+      {players.slice(0, limit).map((p) => (
+        <li key={p.id} className="flex items-center gap-3 border-b border-border/60 py-2 last:border-0">
+          <PlayerAvatar name={p.name} pos={p.pos} size={28} />
+          <span className="flex-1 truncate text-sm font-medium">{p.name}</span>
+          <span className={cn("text-xs font-semibold", p.trend >= 0 ? "text-success" : "text-destructive")}>
+            {p.trend >= 0 ? "+" : ""}
+            {p.trend}
+          </span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+/* FUT-style manager skill ratings */
+export function ManagerRatings() {
+  const overall = Math.round(managerAttributes.reduce((s, a) => s + a.value, 0) / managerAttributes.length)
+  return (
+    <div>
+      <div className="mb-3 flex items-baseline gap-2">
+        <span className="text-3xl font-black tabular-nums text-primary">{overall}</span>
+        <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Overall</span>
+      </div>
+      <div className="grid grid-cols-2 gap-x-5 gap-y-3">
+        {managerAttributes.map((a) => (
+          <div key={a.key} className="flex items-center gap-2">
+            <span className="w-8 text-sm font-black tabular-nums text-primary">{a.value}</span>
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{a.label}</div>
+              <Progress value={a.value} className="mt-0.5 h-1.5" tone={a.value >= 85 ? "success" : "primary"} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* Recent W/L form + points trend */
+export function RecentForm() {
+  return (
+    <div>
+      <div className="mb-3 flex gap-1.5">
+        {recentForm.map((r, i) => (
+          <span
+            key={i}
+            className={cn(
+              "grid h-8 flex-1 place-items-center rounded-lg text-xs font-bold",
+              r === "W" ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive",
+            )}
+          >
+            {r}
+          </span>
+        ))}
+      </div>
+      <div className="mb-1 flex items-center justify-between text-[11px] text-muted-foreground">
+        <span>Points for — last 9 weeks</span>
+        <span className="inline-flex items-center font-semibold text-success">
+          <TrendingUp size={12} /> +12%
+        </span>
+      </div>
+      <Sparkline data={seasonTrend.map((d) => d.pf)} width={620} height={56} className="w-full" />
     </div>
   )
 }
