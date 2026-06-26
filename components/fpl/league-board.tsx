@@ -15,7 +15,7 @@ import {
 } from "@/components/fpl/widgets"
 import { DraftEntry } from "@/components/fpl/draft-entry"
 import { Panel, PanelHeader, Tag, TeamAvatar } from "@/components/fpl/primitives"
-import { BoardWidget, BoardGrid, useBoard, CustomizeToggle, BoardHint, AddWidgetPicker, type WidgetMeta } from "@/components/fpl/board"
+import { BoardWidget, BoardGrid, useBoard, BoardHint, AddWidgetPicker, type WidgetMeta } from "@/components/fpl/board"
 import { matchups, type UserLeague } from "@/lib/mock"
 import { cn } from "@/lib/utils"
 import {
@@ -128,13 +128,16 @@ export function LeagueWorkspace({ league }: { league: UserLeague }) {
 
       {/* Center: drag-and-drop widget board */}
       <div>
-        <div className="mb-3 flex items-center gap-2">
-          <BoardHint editMode={board.editMode} />
-          <div className="ml-auto flex items-center gap-2">
-            {board.editMode && <AddWidgetPicker board={board} catalog={LEAGUE_WIDGETS} groups={WIDGET_GROUPS} />}
-            <CustomizeToggle editMode={board.editMode} onToggle={() => board.setEditMode((e) => !e)} />
+        {board.editMode && (
+          <div className="mb-3 flex items-center gap-2">
+            <BoardHint editMode={board.editMode}>
+              Drag tiles to arrange your board · hide, duplicate or customize data
+            </BoardHint>
+            <div className="ml-auto flex items-center gap-2">
+              <AddWidgetPicker board={board} catalog={LEAGUE_WIDGETS} groups={WIDGET_GROUPS} />
+            </div>
           </div>
-        </div>
+        )}
 
         <BoardGrid>
           {board.visible("commish") && (

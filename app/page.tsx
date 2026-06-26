@@ -16,7 +16,7 @@ import {
   GetStarted,
   UnlockFeatures,
 } from "@/components/fpl/user-widgets"
-import { BoardWidget, BoardGrid, useBoard, AddWidgetPicker, CustomizeToggle, BoardHint } from "@/components/fpl/board"
+import { BoardWidget, BoardGrid, useBoard, AddWidgetPicker, BoardHint } from "@/components/fpl/board"
 import { QuickMockDraft } from "@/components/fpl/draft-entry"
 import { userLeagues, userProfile, upcomingEvents, players, pickEffects, seasonTrend } from "@/lib/mock"
 import {
@@ -193,17 +193,16 @@ export default function Page() {
 
   return (
     <Shell variant="user" title="Home">
-      <div className="mb-3 flex items-center gap-2">
-        <BoardHint editMode={board.editMode}>
-          {board.editMode
-            ? "Edit mode — drag tiles, hide or duplicate. Customize each widget's data from its ⋯ menu. Your profile stays pinned."
-            : "Drag tiles to arrange your board · hide, duplicate or customize data · profile is always pinned"}
-        </BoardHint>
-        <div className="ml-auto flex items-center gap-2">
-          {board.editMode && <AddWidgetPicker board={board} catalog={WIDGETS} groups={WIDGET_GROUPS} />}
-          <CustomizeToggle editMode={board.editMode} onToggle={() => board.setEditMode((e) => !e)} />
+      {board.editMode && (
+        <div className="mb-3 flex items-center gap-2">
+          <BoardHint editMode={board.editMode}>
+            Drag tiles to arrange your board · hide, duplicate or customize data · profile is always pinned
+          </BoardHint>
+          <div className="ml-auto flex items-center gap-2">
+            <AddWidgetPicker board={board} catalog={WIDGETS} groups={WIDGET_GROUPS} />
+          </div>
         </div>
-      </div>
+      )}
 
       <BoardGrid>
         {/* Pinned profile */}

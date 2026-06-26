@@ -6,6 +6,8 @@ import {
   useEffect,
   useLayoutEffect,
   useContext,
+  useCallback,
+  useMemo,
   createContext,
   type ReactNode,
 } from "react"
@@ -93,10 +95,86 @@ export function BoardGrid({ children, className }: { children: ReactNode; classN
   )
 }
 
-/* Board state hook — edit mode + hidden-widget set. */
-export function useBoard(initialHidden: string[] = []) {
+/* ------------------------------------------------------------------ *
+ * Customize context — lets the edit-widget toggle live in the top nav
+ * while the board it controls is rendered lower in the page. A board
+ * registers itself on mount so the nav button only appears on pages that
+ * actually have a customizable board, and the toggle's edit-mode state is
+ * shared with that board.
+ * ------------------------------------------------------------------ */
+interface CustomizeCtx {
+  editMode: boolean
+  setEditMode: (fn: (e: boolean) => boolean) => void
+  active: boolean
+  register: () => () => void
+}
+const CustomizeContext = createContext<CustomizeCtx | null>(null)
+
+export function BoardCustomizeProvider({ children }: { children: ReactNode }) {
   const [editMode, setEditMode] = useState(false)
-  const [hidden, setHidden] = useState<Set<string>>(new Set(initialHidden))
+  const [count, setCount] = useState(0)
+  const register = useCallback(() => {
+    setCount((c) => c + 1)
+    return () => setCount((c) => c - 1)
+  }, [])
+  const value = useMemo(
+    () => ({ editMode, setEditMode, active: count > 0, register }),
+    [editMode, count, register],
+  )
+  return <CustomizeContext.Provider value={value}>{children}</CustomizeContext.Provider>
+}
+
+/* Renders the edit-widget toggle in the top nav, but only on pages whose
+ * board registered itself via useBoard. It's an icon that expands to
+ * reveal a "Customize widgets" label on hover; clicking it toggles edit
+ * mode, which reveals the board's info row + Add-widget button. */
+export function HeaderCustomizeButton() {
+  const ctx = useContext(CustomizeContext)
+  if (!ctx || !ctx.active) return null
+  const open = ctx.editMode
+
+  return (
+    <button
+      onClick={() => ctx.setEditMode((e) => !e)}
+      aria-label="Customize widgets"
+      aria-pressed={open}
+      className={cn(
+        "group/cz flex h-9 items-center rounded-lg border transition-colors",
+        open
+          ? "border-primary bg-primary/10 text-primary"
+          : "border-border text-muted-foreground hover:bg-secondary hover:text-foreground",
+      )}
+    >
+      <span className="grid h-9 w-9 shrink-0 place-items-center">
+        <Sliders size={18} />
+      </span>
+      <span
+        className={cn(
+          "max-w-0 overflow-hidden whitespace-nowrap text-sm font-medium transition-all duration-300 ease-out group-hover/cz:max-w-[12rem]",
+          open && "max-w-[12rem]",
+        )}
+      >
+        <span className="pr-3">{open ? "Done" : "Customize widgets"}</span>
+      </span>
+    </button>
+  )
+}
+
+/* Board state hook — edit mode + hidden-widget set. When a
+ * BoardCustomizeProvider is present (it always is, via the Shell), the
+ * edit-mode state is shared with the top-nav edit-widget toggle and this
+ * board registers itself so that toggle appears. */
+export function useBoard(initialHidden: string[] = []) {
+  const ctx = useContext(CustomizeContext)
+  const [localEdit, setLocalEdit] = useState(false)
+  const editMode = ctx ? ctx.editMode : localEdit
+  const setEditMode: (fn: (e: boolean) => boolean) => void = ctx ? ctx.setEditMode : setLocalEdit
+
+  // Register so the nav toggle appears; register is stable so this runs once.
+  const register = ctx?.register
+  useEffect(() => register?.(), [register])
+
+  const [hidden, setHidden] = useState<Set<string>>(() => new Set(initialHidden))
   const hide = (id: string) => setHidden((s) => new Set(s).add(id))
   const show = (id: string) =>
     setHidden((s) => {
@@ -295,18 +373,19 @@ export function BoardWidget({
   )
 }
 
-/* ------------------------------------------------------------------ *
- * AddWidgetPicker — grouped checklist. Check a row to put it on the
- * board, uncheck to remove; each group can be added/removed at once.
- * Shared by the League and User dashboards so both boards customize
- * the same way.
- * ------------------------------------------------------------------ */
+/* Widget catalog entry used by the board's customize picker. */
 export interface WidgetMeta {
   id: string
   label: string
   icon?: ReactNode
 }
 
+/* ------------------------------------------------------------------ *
+ * AddWidgetPicker — grouped checklist shown in the board's info row
+ * while editing. Check a row to put it on the board, uncheck to remove;
+ * each group can be added/removed at once. Shared by the League and User
+ * dashboards so both boards customize the same way.
+ * ------------------------------------------------------------------ */
 export function AddWidgetPicker({
   board,
   catalog,
@@ -395,23 +474,6 @@ export function AddWidgetPicker({
         </>
       )}
     </div>
-  )
-}
-
-/* Customize / Done toggle button for the header. */
-export function CustomizeToggle({ editMode, onToggle }: { editMode: boolean; onToggle: () => void }) {
-  return (
-    <button
-      onClick={onToggle}
-      className={cn(
-        "hidden items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium lg:flex",
-        editMode
-          ? "border-primary bg-primary/10 text-primary"
-          : "border-border text-muted-foreground hover:text-foreground",
-      )}
-    >
-      <Settings2 size={15} /> {editMode ? "Done" : "Customize"}
-    </button>
   )
 }
 

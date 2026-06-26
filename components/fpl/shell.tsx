@@ -6,6 +6,7 @@ import { TeamAvatar } from "./primitives"
 import { IconRail } from "./icon-rail"
 import { TopNav } from "./top-nav"
 import { LeagueBanner } from "./league-banner"
+import { HeaderCustomizeButton } from "@/components/fpl/board"
 
 /* ------------------------------------------------------------------ *
  * Shell wrapper                                                      *
@@ -82,6 +83,7 @@ export function Shell({
               >
                 <Inbox size={18} />
               </button>
+              <HeaderCustomizeButton />
             </div>
           </div>
         </header>
