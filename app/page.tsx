@@ -4,7 +4,7 @@ import { useState } from "react"
 import Image from "next/image"
 import { Shell } from "@/components/fpl/shell"
 import { Stat, Ring, TeamAvatar, Tag, PlayerAvatar, PositionPill, Progress, Sparkline } from "@/components/fpl/primitives"
-import { ActivityFeed, PlayerNews, WeeklyAwards, AchievementsGrid } from "@/components/fpl/widgets"
+import { ActivityFeed, PlayerNews, WeeklyAwards, ScoringHeatmap } from "@/components/fpl/widgets"
 import {
   LeagueCard,
   BadgeRail,
@@ -42,6 +42,7 @@ import {
   LineChart,
   Rocket,
   Swords,
+  Grid3x3,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -74,18 +75,18 @@ const WIDGETS = [
   { id: "form", label: "Recent Form", icon: <LineChart size={14} /> },
   { id: "ratings", label: "Manager Ratings", icon: <BarChart3 size={14} /> },
   { id: "awards", label: "Weekly Awards", icon: <Flame size={14} /> },
-  { id: "trophies", label: "Trophy Case", icon: <Award size={14} /> },
+  { id: "heatmap", label: "Scoring Heatmap", icon: <Grid3x3 size={14} /> },
   { id: "badges", label: "All Badges", icon: <Award size={14} /> },
 ]
 
 /* Widgets grouped by area so the Add-widget picker can add one-by-one or a whole group. */
 const WIDGET_GROUPS: { label: string; ids: string[] }[] = [
   { label: "Getting Started", ids: ["getstarted", "unlock", "mock"] },
-  { label: "My Season", ids: ["snapshot", "roster", "week", "form", "ratings"] },
+  { label: "My Season", ids: ["snapshot", "roster", "week", "form", "ratings", "heatmap"] },
   { label: "Action", ids: ["queue", "alerts", "upcoming"] },
   { label: "Leagues & Players", ids: ["leagues", "news", "trending"] },
   { label: "Activity", ids: ["activity", "awards"] },
-  { label: "Profile & Rewards", ids: ["effects", "trophies", "badges"] },
+  { label: "Profile & Rewards", ids: ["effects", "badges"] },
 ]
 
 /* ---------------- Pinned profile hero (Mobile-Legends style) ---------------- */
@@ -214,7 +215,7 @@ export default function Page() {
           <BoardWidget
             title="Get Started"
             icon={<Rocket size={16} className="text-primary" />}
-            span="lg:col-span-8"
+            span="lg:col-span-4"
             editMode={board.editMode}
             onHide={() => board.hide("getstarted")}
           >
@@ -481,15 +482,19 @@ export default function Page() {
           </BoardWidget>
         )}
 
-        {board.visible("trophies") && (
+        {board.visible("heatmap") && (
           <BoardWidget
-            title="Trophy Case"
-            icon={<Award size={16} />}
-            span="lg:col-span-4"
+            title="Weekly Scoring Heatmap"
+            icon={<Grid3x3 size={16} />}
+            span="lg:col-span-8"
             editMode={board.editMode}
-            onHide={() => board.hide("trophies")}
+            onHide={() => board.hide("heatmap")}
+            data={{ types: ["PPR points", "Standard", "Half-PPR"] }}
           >
-            <AchievementsGrid columns={5} />
+            <p className="mb-3 text-xs text-muted-foreground">
+              Each cell = that team&apos;s <span className="font-semibold text-foreground">fantasy points</span> that week. Cool = low, warm = high.
+            </p>
+            <ScoringHeatmap limit={5} showLegend />
           </BoardWidget>
         )}
 
