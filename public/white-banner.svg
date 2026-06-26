@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200" viewBox="0 0 800 200">
+  <rect width="800" height="200" fill="#ffffff"/>
+  <g fill="none" stroke="#ededed" stroke-width="6">
+    <path d="M400 36 C440 36 470 30 470 30 L470 96 C470 140 400 168 400 168 C400 168 330 140 330 96 L330 30 C330 30 360 36 400 36 Z"/>
+  </g>
+  <ellipse cx="400" cy="74" rx="26" ry="15" fill="#f4f4f4"/>
+  <text x="400" y="120" font-family="Arial, sans-serif" font-size="34" font-weight="bold" fill="#f0f0f0" text-anchor="middle">FPL</text>
+</svg>

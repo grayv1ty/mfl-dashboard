@@ -162,4 +162,30 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* League nav banner — left-anchored, fading out to the right so the nav
+     stays readable. The inner layer replays a left-to-right wipe whenever it
+     remounts (on navigation). */
+  .banner-fade {
+    -webkit-mask-image: linear-gradient(to right, black 0%, black 55%, transparent 100%);
+    mask-image: linear-gradient(to right, black 0%, black 55%, transparent 100%);
+  }
+  .banner-sweep {
+    animation: banner-sweep-in 0.6s ease-out;
+  }
+  @keyframes banner-sweep-in {
+    from {
+      opacity: 0;
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      opacity: 1;
+      clip-path: inset(0 0 0 0);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .banner-sweep {
+      animation: none;
+    }
+  }
 }

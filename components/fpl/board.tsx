@@ -20,7 +20,6 @@ import {
   Check,
   X,
   Sliders,
-  Maximize2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -29,14 +28,6 @@ import { cn } from "@/lib/utils"
  * Powers the resizable / hide / duplicate / add / customize-data
  * widget boards used by both the League and User dashboards.
  * ------------------------------------------------------------------ */
-
-/* Width presets — literal classes so Tailwind picks them up at build time. */
-const WIDTH_PRESETS = [
-  { label: "⅓", cls: "lg:col-span-4" },
-  { label: "½", cls: "lg:col-span-6" },
-  { label: "⅔", cls: "lg:col-span-8" },
-  { label: "Full", cls: "lg:col-span-12" },
-] as const
 
 export interface WidgetData {
   years?: string[]
@@ -181,16 +172,15 @@ export function BoardWidget({
 }) {
   const masonry = useContext(MasonryCtx)
   const [open, setOpen] = useState(false)
-  const [spanCls, setSpanCls] = useState(span)
-  const [tall, setTall] = useState(span.includes("row-span"))
   const [copies, setCopies] = useState(0)
   const [year, setYear] = useState(data?.years?.[0])
   const [range, setRange] = useState(data?.ranges?.[0])
   const [type, setType] = useState(data?.types?.[0])
 
   const caption = [year, range, type].filter(Boolean).join(" · ")
-  const widthCls = spanCls.replace(/lg:row-span-\d+/g, "").trim()
-  // In masonry mode height is driven by content, so "double height" becomes a
+  const tall = span.includes("row-span")
+  const widthCls = span.replace(/lg:row-span-\d+/g, "").trim()
+  // In masonry mode height is driven by content, so a tall tile becomes a
   // min-height instead of a row span (the grid measures the result either way).
   const finalSpan = cn(widthCls, tall && (masonry ? "lg:min-h-[26rem]" : "lg:row-span-2"))
 
@@ -248,54 +238,19 @@ export function BoardWidget({
             <>
               <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} aria-hidden />
               <div className="absolute right-0 top-7 z-30 w-60 rounded-xl border border-border bg-popover p-1.5 shadow-xl">
-                {/* Width */}
-                <div className="px-1.5 py-1">
-                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Width</div>
-                  <div className="flex gap-1">
-                    {WIDTH_PRESETS.map((w) => (
-                      <button
-                        key={w.label}
-                        onClick={() => {
-                          setSpanCls(w.cls)
-                          setOpen(false)
-                        }}
-                        className={cn(
-                          "flex-1 rounded-md border px-1.5 py-1 text-xs font-medium",
-                          widthCls === w.cls
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-border text-muted-foreground hover:text-foreground",
-                        )}
-                      >
-                        {w.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    setTall((t) => !t)
-                    setOpen(false)
-                  }}
-                  className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-secondary"
-                >
-                  <Maximize2 size={14} /> {tall ? "Standard height" : "Double height"}
-                  {tall && <Check size={14} className="ml-auto text-primary" />}
-                </button>
-
                 {/* Data customization */}
                 {data && (
                   <>
-                    <div className="my-1 h-px bg-border" />
                     <div className="flex items-center gap-1.5 px-1.5 pt-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                       <Sliders size={11} /> Data
                     </div>
                     {data.years && <Segmented label="Season" options={data.years} value={year!} onChange={setYear} />}
                     {data.ranges && <Segmented label="Range" options={data.ranges} value={range!} onChange={setRange} />}
                     {data.types && <Segmented label="Metric" options={data.types} value={type!} onChange={setType} />}
+                    <div className="my-1 h-px bg-border" />
                   </>
                 )}
 
-                <div className="my-1 h-px bg-border" />
                 {locked ? (
                   <div className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-muted-foreground">
                     <Lock size={14} /> Pinned · can&apos;t remove
@@ -341,65 +296,100 @@ export function BoardWidget({
 }
 
 /* ------------------------------------------------------------------ *
- * AddWidgetMenu — palette dropdown to add a widget or restore hidden ones.
+ * AddWidgetPicker — grouped checklist. Check a row to put it on the
+ * board, uncheck to remove; each group can be added/removed at once.
+ * Shared by the League and User dashboards so both boards customize
+ * the same way.
  * ------------------------------------------------------------------ */
-export function AddWidgetMenu({
+export interface WidgetMeta {
+  id: string
+  label: string
+  icon?: ReactNode
+}
+
+export function AddWidgetPicker({
+  board,
   catalog,
-  hidden = [],
-  onRestore,
+  groups,
 }: {
-  catalog: { id: string; label: string; icon?: ReactNode }[]
-  hidden?: { id: string; label: string }[]
-  onRestore?: (id: string) => void
+  board: ReturnType<typeof useBoard>
+  catalog: WidgetMeta[]
+  groups: { label: string; ids: string[] }[]
 }) {
   const [open, setOpen] = useState(false)
+  const onCount = catalog.filter((w) => board.visible(w.id)).length
+
   return (
     <div className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
+        className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
       >
         <Plus size={15} /> Add widget
       </button>
+
       {open && (
         <>
           <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} aria-hidden />
-          <div className="absolute right-0 top-11 z-30 w-64 rounded-xl border border-border bg-popover p-1.5 shadow-xl">
-            {hidden.length > 0 && (
-              <>
-                <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Restore hidden
-                </div>
-                {hidden.map((h) => (
-                  <button
-                    key={h.id}
-                    onClick={() => {
-                      onRestore?.(h.id)
-                      setOpen(false)
-                    }}
-                    className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-secondary"
-                  >
-                    <Plus size={14} className="text-primary" /> {h.label}
-                  </button>
-                ))}
-                <div className="my-1 h-px bg-border" />
-              </>
-            )}
-            <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Widget library
+          <div className="absolute right-0 top-11 z-30 w-72 rounded-xl border border-border bg-popover p-2 shadow-xl">
+            <div className="flex items-center justify-between px-1 pb-1.5">
+              <span className="text-sm font-semibold">Widgets</span>
+              <span className="text-[11px] tabular-nums text-muted-foreground">
+                {onCount}/{catalog.length} on board
+              </span>
             </div>
-            <div className="max-h-64 overflow-y-auto no-scrollbar">
-              {catalog.map((c) => (
-                <button
-                  key={c.id}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm hover:bg-secondary"
-                >
-                  <span className="grid h-7 w-7 place-items-center rounded-md bg-secondary text-muted-foreground">
-                    {c.icon ?? <Plus size={14} />}
-                  </span>
-                  {c.label}
-                </button>
-              ))}
+
+            <div className="max-h-[60vh] space-y-2 overflow-y-auto no-scrollbar">
+              {groups.map((g) => {
+                const items = g.ids
+                  .map((id) => catalog.find((w) => w.id === id))
+                  .filter((w): w is WidgetMeta => Boolean(w))
+                if (items.length === 0) return null
+                const allOn = items.every((w) => board.visible(w.id))
+                return (
+                  <div key={g.label}>
+                    <div className="flex items-center justify-between px-1 py-1">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{g.label}</span>
+                      <button
+                        onClick={() => items.forEach((w) => (allOn ? board.hide(w.id) : board.show(w.id)))}
+                        className="text-[11px] font-medium text-primary hover:underline"
+                      >
+                        {allOn ? "Remove all" : "Add all"}
+                      </button>
+                    </div>
+                    <div className="space-y-0.5">
+                      {items.map((w) => {
+                        const on = board.visible(w.id)
+                        return (
+                          <button
+                            key={w.id}
+                            onClick={() => (on ? board.hide(w.id) : board.show(w.id))}
+                            className="flex w-full items-center gap-2.5 rounded-lg px-1.5 py-1.5 text-left text-sm hover:bg-secondary"
+                          >
+                            <span
+                              className={cn(
+                                "grid h-7 w-7 place-items-center rounded-md transition-colors",
+                                on ? "bg-primary/15 text-primary" : "bg-secondary text-muted-foreground",
+                              )}
+                            >
+                              {w.icon ?? <Plus size={14} />}
+                            </span>
+                            <span className={cn("flex-1 truncate", !on && "text-muted-foreground")}>{w.label}</span>
+                            <span
+                              className={cn(
+                                "grid h-[18px] w-[18px] place-items-center rounded-md border transition-colors",
+                                on ? "border-primary bg-primary text-primary-foreground" : "border-border text-transparent",
+                              )}
+                            >
+                              <Check size={12} strokeWidth={3} />
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </>
@@ -446,8 +436,8 @@ export function BoardHint({
       </span>
       {children ??
         (editMode
-          ? "Edit mode — drag tiles, resize, hide or duplicate. Customize each widget's data from its ⋯ menu."
-          : "Drag tiles to arrange your board · resize, hide, duplicate or customize data per widget")}
+          ? "Edit mode — drag tiles, hide or duplicate. Customize each widget's data from its ⋯ menu."
+          : "Drag tiles to arrange your board · hide, duplicate or customize data per widget")}
       {hidden.length > 0 && (
         <span className="ml-1 flex flex-wrap items-center gap-1.5">
           ·

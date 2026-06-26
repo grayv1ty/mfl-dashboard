@@ -1,11 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Gavel, ChevronDown, ArrowUp, ArrowDown, Plus, List, LayoutGrid, Check } from "lucide-react"
+import { Search, ChevronDown, ArrowUp, ArrowDown, Plus, List, LayoutGrid, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { players, standings, transactions, POSITION_COLORS, type Player, type Position } from "@/lib/mock"
 import { Panel, PanelHeader, Tag, TeamAvatar, PlayerAvatar, PositionPill } from "./primitives"
-import { DraftEntry } from "./draft-entry"
+import { DraftEntry, PracticeDraftList, DraftResults } from "./draft-entry"
 
 const MY_TEAM_ID = standings[0].id
 
@@ -114,7 +114,80 @@ function rosterFor(teamIdx: number): Lineup {
 const filledStarters = (l: Lineup) => Object.values(l.slots).filter((p): p is Player => Boolean(p))
 
 /* ---------------- Player rows / cards ---------------- */
-function PlayerLine({ player, slot, onBench }: { player: Player; slot?: string; onBench?: () => void }) {
+
+/* Starter dropdown — send to an empty bench, or swap with an eligible bench player. */
+function StarterMenu({
+  options,
+  onBench,
+  onSwap,
+  onClose,
+}: {
+  options: Player[]
+  onBench: () => void
+  onSwap?: (p: Player) => void
+  onClose: () => void
+}) {
+  return (
+    <>
+      <div className="fixed inset-0 z-20" onClick={onClose} aria-hidden />
+      <div className="absolute right-0 top-9 z-30 max-h-72 w-60 overflow-y-auto rounded-xl border border-border bg-popover p-1 shadow-xl no-scrollbar">
+        <button
+          onClick={() => {
+            onBench()
+            onClose()
+          }}
+          className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-secondary"
+        >
+          <ArrowDown size={14} /> Move to bench
+        </button>
+        {onSwap && (
+          <>
+            <div className="my-1 h-px bg-border" />
+            <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Swap with bench
+            </div>
+            {options.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => {
+                  onSwap(p)
+                  onClose()
+                }}
+                className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left hover:bg-secondary"
+              >
+                <PlayerAvatar name={p.name} pos={p.pos} size={26} />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">{p.name}</div>
+                  <div className="text-[11px] text-muted-foreground">{p.team}</div>
+                </div>
+                <PositionPill pos={p.pos} />
+                <span className="w-9 text-right text-xs font-bold tabular-nums">{p.points.toFixed(1)}</span>
+              </button>
+            ))}
+            {options.length === 0 && (
+              <div className="px-2 py-1.5 text-xs text-muted-foreground">No eligible bench player</div>
+            )}
+          </>
+        )}
+      </div>
+    </>
+  )
+}
+
+function PlayerLine({
+  player,
+  slot,
+  onBench,
+  swapOptions,
+  onSwap,
+}: {
+  player: Player
+  slot?: string
+  onBench?: () => void
+  swapOptions?: Player[]
+  onSwap?: (p: Player) => void
+}) {
+  const [open, setOpen] = useState(false)
   return (
     <div className="flex items-center gap-3 py-2">
       {slot && <span className="w-9 shrink-0 text-center text-[11px] font-bold uppercase text-muted-foreground">{slot}</span>}
@@ -126,19 +199,35 @@ function PlayerLine({ player, slot, onBench }: { player: Player; slot?: string; 
       <PositionPill pos={player.pos} />
       <span className="w-12 text-right text-sm font-bold tabular-nums">{player.points.toFixed(1)}</span>
       {onBench && (
-        <button
-          onClick={onBench}
-          title="Move to bench"
-          className="grid h-7 w-7 shrink-0 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-        >
-          <ArrowDown size={14} />
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => setOpen((o) => !o)}
+            title="Bench or swap"
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          >
+            <ArrowDown size={14} />
+          </button>
+          {open && (
+            <StarterMenu options={swapOptions ?? []} onBench={onBench} onSwap={onSwap} onClose={() => setOpen(false)} />
+          )}
+        </div>
       )}
     </div>
   )
 }
 
-function PlayerCard({ player, onBench }: { player: Player; onBench?: () => void }) {
+function PlayerCard({
+  player,
+  onBench,
+  swapOptions,
+  onSwap,
+}: {
+  player: Player
+  onBench?: () => void
+  swapOptions?: Player[]
+  onSwap?: (p: Player) => void
+}) {
+  const [open, setOpen] = useState(false)
   return (
     <div className="flex min-w-0 flex-col items-center rounded-xl border border-border bg-secondary/30 p-3 text-center">
       <PlayerAvatar name={player.name} pos={player.pos} size={44} />
@@ -148,37 +237,137 @@ function PlayerCard({ player, onBench }: { player: Player; onBench?: () => void 
       </div>
       <div className="text-lg font-bold tabular-nums">{player.points.toFixed(1)}</div>
       {onBench && (
-        <button
-          onClick={onBench}
-          className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-md border border-border py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-        >
-          <ArrowDown size={13} /> Bench
-        </button>
+        <div className="relative mt-2 w-full">
+          <button
+            onClick={() => setOpen((o) => !o)}
+            className="flex w-full items-center justify-center gap-1.5 rounded-md border border-border py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          >
+            <ArrowDown size={13} /> Bench
+          </button>
+          {open && (
+            <StarterMenu options={swapOptions ?? []} onBench={onBench} onSwap={onSwap} onClose={() => setOpen(false)} />
+          )}
+        </div>
       )}
     </div>
   )
 }
 
-function EmptySlotLine({ pos }: { pos: string }) {
+/* Popup listing eligible bench players to drop into an empty slot. */
+function BenchPickerMenu({
+  options,
+  onPick,
+  onClose,
+}: {
+  options: Player[]
+  onPick: (p: Player) => void
+  onClose: () => void
+}) {
   return (
-    <div className="flex items-center gap-3 py-2">
+    <>
+      <div className="fixed inset-0 z-20" onClick={onClose} aria-hidden />
+      <div className="absolute left-0 top-9 z-30 max-h-72 w-60 overflow-y-auto rounded-xl border border-border bg-popover p-1 shadow-xl no-scrollbar">
+        <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Add from bench
+        </div>
+        {options.map((p) => (
+          <button
+            key={p.id}
+            onClick={() => {
+              onPick(p)
+              onClose()
+            }}
+            className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left hover:bg-secondary"
+          >
+            <PlayerAvatar name={p.name} pos={p.pos} size={26} />
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-medium">{p.name}</div>
+              <div className="text-[11px] text-muted-foreground">{p.team}</div>
+            </div>
+            <PositionPill pos={p.pos} />
+            <span className="w-9 text-right text-xs font-bold tabular-nums">{p.points.toFixed(1)}</span>
+          </button>
+        ))}
+        {options.length === 0 && (
+          <div className="px-2 py-1.5 text-xs text-muted-foreground">No eligible bench player</div>
+        )}
+      </div>
+    </>
+  )
+}
+
+function EmptySlotLine({
+  pos,
+  options,
+  onPick,
+}: {
+  pos: string
+  options?: Player[]
+  onPick?: (p: Player) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const interactive = Boolean(onPick)
+  return (
+    <div className="relative flex items-center gap-3 py-2">
       <span className="w-9 shrink-0 text-center text-[11px] font-bold uppercase text-muted-foreground">{pos}</span>
       <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-dashed border-border text-muted-foreground/70">
         <Plus size={14} />
       </span>
-      <span className="flex-1 text-sm text-muted-foreground">Empty slot</span>
+      {interactive ? (
+        <button
+          onClick={() => setOpen((o) => !o)}
+          className="flex-1 text-left text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Add player
+        </button>
+      ) : (
+        <span className="flex-1 text-sm text-muted-foreground">Empty slot</span>
+      )}
+      {open && onPick && (
+        <BenchPickerMenu options={options ?? []} onPick={onPick} onClose={() => setOpen(false)} />
+      )}
     </div>
   )
 }
 
-function EmptySlotCard({ pos }: { pos: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-secondary/10 p-3 text-center">
+function EmptySlotCard({
+  pos,
+  options,
+  onPick,
+}: {
+  pos: string
+  options?: Player[]
+  onPick?: (p: Player) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const interactive = Boolean(onPick)
+  const inner = (
+    <>
       <span className="grid h-11 w-11 place-items-center rounded-full border border-dashed border-border text-muted-foreground/70">
         <Plus size={18} />
       </span>
       <div className="mt-2 text-sm font-medium text-muted-foreground">{pos}</div>
-      <div className="text-[11px] text-muted-foreground">Empty</div>
+      <div className="text-[11px] text-muted-foreground">{interactive ? "Add player" : "Empty"}</div>
+    </>
+  )
+  if (!interactive) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-secondary/10 p-3 text-center">
+        {inner}
+      </div>
+    )
+  }
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full flex-col items-center justify-center rounded-xl border border-dashed border-border bg-secondary/10 p-3 text-center transition-colors hover:border-primary/50 hover:bg-secondary/30"
+      >
+        {inner}
+      </button>
+      {open && onPick && (
+        <BenchPickerMenu options={options ?? []} onPick={onPick} onClose={() => setOpen(false)} />
+      )}
     </div>
   )
 }
@@ -275,23 +464,36 @@ function StartersView({
   view,
   editable,
   onBench,
+  onStart,
   dense = false,
 }: {
   lineup: Lineup
   view: "table" | "cards"
   editable: boolean
   onBench: (slotId: string) => void
+  onStart?: (p: Player, slotId: string) => void
   dense?: boolean
 }) {
   const slots = SLOT_DEFS.map((d) => ({ id: d.id, pos: d.pos, player: lineup.slots[d.id] ?? null }))
+  // Bench players eligible to drop into a given slot.
+  const benchFor = (slotPos: string) => lineup.bench.filter((p) => eligible(slotPos, p.pos))
+  const pickHandler = (slotId: string) =>
+    editable && onStart ? (p: Player) => onStart(p, slotId) : undefined
+
   if (view === "cards") {
     return (
       <div className={cn("grid gap-2.5", dense ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4")}>
         {slots.map((s) =>
           s.player ? (
-            <PlayerCard key={s.id} player={s.player} onBench={editable ? () => onBench(s.id) : undefined} />
+            <PlayerCard
+              key={s.id}
+              player={s.player}
+              onBench={editable ? () => onBench(s.id) : undefined}
+              swapOptions={benchFor(s.pos)}
+              onSwap={pickHandler(s.id)}
+            />
           ) : (
-            <EmptySlotCard key={s.id} pos={s.pos} />
+            <EmptySlotCard key={s.id} pos={s.pos} options={benchFor(s.pos)} onPick={pickHandler(s.id)} />
           ),
         )}
       </div>
@@ -301,9 +503,16 @@ function StartersView({
     <div className="divide-y divide-border/60">
       {slots.map((s) =>
         s.player ? (
-          <PlayerLine key={s.id} player={s.player} slot={s.pos} onBench={editable ? () => onBench(s.id) : undefined} />
+          <PlayerLine
+            key={s.id}
+            player={s.player}
+            slot={s.pos}
+            onBench={editable ? () => onBench(s.id) : undefined}
+            swapOptions={benchFor(s.pos)}
+            onSwap={pickHandler(s.id)}
+          />
         ) : (
-          <EmptySlotLine key={s.id} pos={s.pos} />
+          <EmptySlotLine key={s.id} pos={s.pos} options={benchFor(s.pos)} onPick={pickHandler(s.id)} />
         ),
       )}
     </div>
@@ -470,7 +679,7 @@ function TeamRosterBlock({
         </span>
       </div>
       <div className="px-4 pb-4">
-        <StartersView lineup={lineup} view={view} editable={editable} onBench={onBench} dense />
+        <StartersView lineup={lineup} view={view} editable={editable} onBench={onBench} onStart={onStart} dense />
         <button
           onClick={() => setShowBench((s) => !s)}
           className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-border py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
@@ -604,7 +813,7 @@ function SummaryPanel({ lineup, isAll }: { lineup: Lineup; isAll: boolean }) {
 
 function RosterView() {
   const [teamId, setTeamId] = useState<string>("all")
-  const [view, setView] = useState<"table" | "cards">("table")
+  const [view, setView] = useState<"table" | "cards">("cards")
   const [myLineup, setMyLineup] = useState<Lineup>(() => rosterFor(0))
 
   const isAll = teamId === "all"
@@ -679,7 +888,7 @@ function RosterView() {
                   action={<Tag tone="muted">{filledStarters(selected).length}/{SLOT_DEFS.length}</Tag>}
                 />
                 <div className="px-4 pb-4">
-                  <StartersView lineup={selected} view="table" editable={isMine} onBench={benchSlot} />
+                  <StartersView lineup={selected} view="table" editable={isMine} onBench={benchSlot} onStart={startInSlot} />
                 </div>
               </Panel>
               <Panel>
@@ -864,36 +1073,26 @@ function PlayersView() {
 
 /* ---------------- Draft Center ---------------- */
 function DraftView() {
-  const [filter, setFilter] = useState("Big Board")
-  const board = [...players].sort((a, b) => a.adp - b.adp)
+  const [filter, setFilter] = useState("Practice Drafts")
   return (
     <div>
-      <SectionHeader title="Draft Center" desc="Prep your board, run a mock, and review results." />
-      <FilterBar options={["Big Board", "Mock Draft", "Results"]} value={filter} onChange={setFilter} />
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <SectionHeader title="Draft Center" desc="Run practice drafts and review how they graded out." />
+      <FilterBar options={["Practice Drafts", "Results"]} value={filter} onChange={setFilter}>
+        {filter === "Practice Drafts" && (
+          <button className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-1.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90">
+            <Plus size={15} /> New practice draft
+          </button>
+        )}
+      </FilterBar>
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <Panel>
-            <PanelHeader title={filter} action={<Tag tone="muted">Best available</Tag>} />
+            <PanelHeader
+              title={filter === "Results" ? "Draft results" : "Your practice drafts"}
+              action={<Tag tone="muted">{filter === "Results" ? "Graded vs ADP" : "Solo mocks"}</Tag>}
+            />
             <div className="px-4 pb-4">
-              {filter === "Big Board" && (
-                <ol className="space-y-1.5">
-                  {board.map((p, i) => (
-                    <li key={p.id} className="flex items-center gap-3 rounded-lg bg-secondary/40 px-3 py-2">
-                      <span className="w-5 text-center text-xs font-bold tabular-nums text-muted-foreground">{i + 1}</span>
-                      <PlayerAvatar name={p.name} pos={p.pos} size={28} />
-                      <span className="flex-1 truncate text-sm font-medium">{p.name}</span>
-                      <span className="text-[11px] text-muted-foreground">{p.team}</span>
-                      <PositionPill pos={p.pos} />
-                    </li>
-                  ))}
-                </ol>
-              )}
-              {filter !== "Big Board" && (
-                <div className="grid place-items-center rounded-xl border border-dashed border-border py-16 text-center text-sm text-muted-foreground">
-                  <Gavel size={22} className="mb-2 opacity-60" />
-                  {filter} workspace is coming soon.
-                </div>
-              )}
+              {filter === "Results" ? <DraftResults /> : <PracticeDraftList onViewResults={() => setFilter("Results")} />}
             </div>
           </Panel>
         </div>

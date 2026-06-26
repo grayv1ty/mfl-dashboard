@@ -16,7 +16,7 @@ import {
   GetStarted,
   UnlockFeatures,
 } from "@/components/fpl/user-widgets"
-import { BoardWidget, BoardGrid, useBoard, AddWidgetMenu, CustomizeToggle, BoardHint } from "@/components/fpl/board"
+import { BoardWidget, BoardGrid, useBoard, AddWidgetPicker, CustomizeToggle, BoardHint } from "@/components/fpl/board"
 import { QuickMockDraft } from "@/components/fpl/draft-entry"
 import { userLeagues, userProfile, upcomingEvents, players, pickEffects, seasonTrend } from "@/lib/mock"
 import {
@@ -76,6 +76,16 @@ const WIDGETS = [
   { id: "awards", label: "Weekly Awards", icon: <Flame size={14} /> },
   { id: "trophies", label: "Trophy Case", icon: <Award size={14} /> },
   { id: "badges", label: "All Badges", icon: <Award size={14} /> },
+]
+
+/* Widgets grouped by area so the Add-widget picker can add one-by-one or a whole group. */
+const WIDGET_GROUPS: { label: string; ids: string[] }[] = [
+  { label: "Getting Started", ids: ["getstarted", "unlock", "mock"] },
+  { label: "My Season", ids: ["snapshot", "roster", "week", "form", "ratings"] },
+  { label: "Action", ids: ["queue", "alerts", "upcoming"] },
+  { label: "Leagues & Players", ids: ["leagues", "news", "trending"] },
+  { label: "Activity", ids: ["activity", "awards"] },
+  { label: "Profile & Rewards", ids: ["effects", "trophies", "badges"] },
 ]
 
 /* ---------------- Pinned profile hero (Mobile-Legends style) ---------------- */
@@ -179,24 +189,20 @@ export default function Page() {
   const equipped = pickEffects.find((e) => e.id === equippedId) ?? pickEffects[0]
   const likes = userProfile.likes + (liked ? 1 : 0)
   const starters = players.slice(0, 6)
-  const hiddenList = WIDGETS.filter((w) => board.hidden.has(w.id))
 
   return (
-    <Shell
-      variant="user"
-      title="Home"
-      headerExtra={
-        <>
+    <Shell variant="user" title="Home">
+      <div className="mb-3 flex items-center gap-2">
+        <BoardHint editMode={board.editMode}>
+          {board.editMode
+            ? "Edit mode — drag tiles, hide or duplicate. Customize each widget's data from its ⋯ menu. Your profile stays pinned."
+            : "Drag tiles to arrange your board · hide, duplicate or customize data · profile is always pinned"}
+        </BoardHint>
+        <div className="ml-auto flex items-center gap-2">
+          {board.editMode && <AddWidgetPicker board={board} catalog={WIDGETS} groups={WIDGET_GROUPS} />}
           <CustomizeToggle editMode={board.editMode} onToggle={() => board.setEditMode((e) => !e)} />
-          <AddWidgetMenu catalog={WIDGETS} hidden={hiddenList} onRestore={board.show} />
-        </>
-      }
-    >
-      <BoardHint editMode={board.editMode} hidden={hiddenList} onRestore={board.show}>
-        {board.editMode
-          ? "Edit mode — drag, resize, hide or duplicate tiles. Customize each widget's data from its ⋯ menu. Your profile stays pinned."
-          : "Drag tiles to arrange your board · resize, hide, duplicate or customize data · profile is always pinned"}
-      </BoardHint>
+        </div>
+      </div>
 
       <BoardGrid>
         {/* Pinned profile */}

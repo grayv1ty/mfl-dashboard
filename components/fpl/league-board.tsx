@@ -1,6 +1,5 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
 import Image from "next/image"
 import {
   StandingsTable,
@@ -16,7 +15,7 @@ import {
 } from "@/components/fpl/widgets"
 import { DraftEntry } from "@/components/fpl/draft-entry"
 import { Panel, PanelHeader, Tag, TeamAvatar } from "@/components/fpl/primitives"
-import { BoardWidget, BoardGrid, useBoard, CustomizeToggle, BoardHint } from "@/components/fpl/board"
+import { BoardWidget, BoardGrid, useBoard, CustomizeToggle, BoardHint, AddWidgetPicker, type WidgetMeta } from "@/components/fpl/board"
 import { matchups, type UserLeague } from "@/lib/mock"
 import { cn } from "@/lib/utils"
 import {
@@ -32,15 +31,7 @@ import {
   MessageSquare,
   Flame,
   Calendar,
-  Plus,
-  Check,
 } from "lucide-react"
-
-interface WidgetMeta {
-  id: string
-  label: string
-  icon: ReactNode
-}
 
 const LEAGUE_WIDGETS: WidgetMeta[] = [
   { id: "commish", label: "Commissioner Control", icon: <Crown size={15} /> },
@@ -73,7 +64,12 @@ function LeagueCard({ league }: { league: UserLeague }) {
   return (
     <Panel className="overflow-hidden">
       <div className="relative h-20">
-        <Image src="/league-banner.png" alt="" fill priority className="object-cover" />
+        <Image src={league.banner} alt="" fill priority className="object-cover" />
+        {/* League-color tint — matches the nav banner */}
+        <div
+          className="absolute inset-0 mix-blend-color"
+          style={{ background: `linear-gradient(90deg, oklch(0.6 0.2 ${Number(league.hue)}), oklch(0.5 0.16 ${(Number(league.hue) + 40) % 360}))` }}
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-card/10" />
         <div className="absolute right-2.5 top-2.5 flex gap-1.5">
           <span className="rounded-full bg-background/70 px-2 py-0.5 text-[10px] font-semibold backdrop-blur">{league.format}</span>
@@ -112,90 +108,6 @@ function LeagueCard({ league }: { league: UserLeague }) {
   )
 }
 
-/* ------------------------------------------------------------------ *
- * Add-widget picker — grouped checklist. Check a row to put it on the
- * board, uncheck to remove; each group can be added/removed at once.
- * ------------------------------------------------------------------ */
-function AddWidgetPicker({ board }: { board: ReturnType<typeof useBoard> }) {
-  const [open, setOpen] = useState(false)
-  const onCount = LEAGUE_WIDGETS.filter((w) => board.visible(w.id)).length
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
-      >
-        <Plus size={15} /> Add widget
-      </button>
-
-      {open && (
-        <>
-          <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} aria-hidden />
-          <div className="absolute right-0 top-11 z-30 w-72 rounded-xl border border-border bg-popover p-2 shadow-xl">
-            <div className="flex items-center justify-between px-1 pb-1.5">
-              <span className="text-sm font-semibold">Widgets</span>
-              <span className="text-[11px] tabular-nums text-muted-foreground">{onCount}/{LEAGUE_WIDGETS.length} on board</span>
-            </div>
-
-            <div className="max-h-[60vh] space-y-2 overflow-y-auto no-scrollbar">
-              {WIDGET_GROUPS.map((g) => {
-                const items = g.ids
-                  .map((id) => LEAGUE_WIDGETS.find((w) => w.id === id))
-                  .filter((w): w is WidgetMeta => Boolean(w))
-                const allOn = items.every((w) => board.visible(w.id))
-                return (
-                  <div key={g.label}>
-                    <div className="flex items-center justify-between px-1 py-1">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{g.label}</span>
-                      <button
-                        onClick={() => items.forEach((w) => (allOn ? board.hide(w.id) : board.show(w.id)))}
-                        className="text-[11px] font-medium text-primary hover:underline"
-                      >
-                        {allOn ? "Remove all" : "Add all"}
-                      </button>
-                    </div>
-                    <div className="space-y-0.5">
-                      {items.map((w) => {
-                        const on = board.visible(w.id)
-                        return (
-                          <button
-                            key={w.id}
-                            onClick={() => (on ? board.hide(w.id) : board.show(w.id))}
-                            className="flex w-full items-center gap-2.5 rounded-lg px-1.5 py-1.5 text-left text-sm hover:bg-secondary"
-                          >
-                            <span
-                              className={cn(
-                                "grid h-7 w-7 place-items-center rounded-md transition-colors",
-                                on ? "bg-primary/15 text-primary" : "bg-secondary text-muted-foreground",
-                              )}
-                            >
-                              {w.icon}
-                            </span>
-                            <span className={cn("flex-1 truncate", !on && "text-muted-foreground")}>{w.label}</span>
-                            <span
-                              className={cn(
-                                "grid h-[18px] w-[18px] place-items-center rounded-md border transition-colors",
-                                on ? "border-primary bg-primary text-primary-foreground" : "border-border text-transparent",
-                              )}
-                            >
-                              <Check size={12} strokeWidth={3} />
-                            </span>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-
 export function LeagueWorkspace({ league }: { league: UserLeague }) {
   // A couple of widgets start off the board so "Add widget" has immediate value.
   const board = useBoard(["heatmap", "injuries"])
@@ -219,7 +131,7 @@ export function LeagueWorkspace({ league }: { league: UserLeague }) {
         <div className="mb-3 flex items-center gap-2">
           <BoardHint editMode={board.editMode} />
           <div className="ml-auto flex items-center gap-2">
-            {board.editMode && <AddWidgetPicker board={board} />}
+            {board.editMode && <AddWidgetPicker board={board} catalog={LEAGUE_WIDGETS} groups={WIDGET_GROUPS} />}
             <CustomizeToggle editMode={board.editMode} onToggle={() => board.setEditMode((e) => !e)} />
           </div>
         </div>

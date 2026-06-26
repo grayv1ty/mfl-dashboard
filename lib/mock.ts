@@ -362,6 +362,7 @@ export interface UserLeague {
   id: string
   name: string
   hue: string // gradient seed
+  banner: string // banner image, tinted by `hue`
   format: "Dynasty" | "Redraft" | "Keeper" | "Best Ball"
   teams: number
   myRank: number
@@ -377,11 +378,12 @@ export interface UserLeague {
 }
 
 export const userLeagues: UserLeague[] = [
-  { id: "zxjalkzjf", name: "Dynasty Warlords", hue: "26", format: "Dynasty", teams: 12, myRank: 1, record: "4-2", pointsFor: 629, nextOpponent: "Audible Authority", matchupStatus: "live", myScore: 98.4, oppScore: 81.2, unread: 3, leading: true },
-  { id: "scott-fish", name: "Scott Fish Bowl", hue: "245", format: "Best Ball", teams: 12, myRank: 3, record: "5-1", pointsFor: 712, nextOpponent: "Sharks", matchupStatus: "live", myScore: 142.6, oppScore: 138.1, unread: 0, leading: true },
-  { id: "gridiron", name: "The Gridiron Society", hue: "152", format: "Redraft", teams: 10, myRank: 6, record: "2-4", pointsFor: 540, nextOpponent: "Pocket Passers", matchupStatus: "upcoming", myScore: 0, oppScore: 0, unread: 1, leading: false, draftIn: "2d 4h" },
-  { id: "office-league", name: "Office League '26", hue: "320", format: "Keeper", teams: 8, myRank: 2, record: "5-1", pointsFor: 588, nextOpponent: "HR Hitmen", matchupStatus: "upcoming", myScore: 0, oppScore: 0, unread: 0, leading: false },
-  { id: "college-buds", name: "College Buds", hue: "95", format: "Redraft", teams: 14, myRank: 9, record: "2-4", pointsFor: 512, nextOpponent: "The Quad", matchupStatus: "live", myScore: 64.2, oppScore: 90.8, unread: 5, leading: false },
+  { id: "zxjalkzjf", name: "Dynasty Warlords", hue: "26", banner: "/league-banner.png", format: "Dynasty", teams: 12, myRank: 1, record: "4-2", pointsFor: 629, nextOpponent: "Audible Authority", matchupStatus: "live", myScore: 98.4, oppScore: 81.2, unread: 3, leading: true },
+  { id: "scott-fish", name: "Scott Fish Bowl", hue: "245", banner: "/gameday-hero.png", format: "Best Ball", teams: 12, myRank: 3, record: "5-1", pointsFor: 712, nextOpponent: "Sharks", matchupStatus: "live", myScore: 142.6, oppScore: 138.1, unread: 0, leading: true },
+  { id: "gridiron", name: "The Gridiron Society", hue: "152", banner: "/hero-stadium.png", format: "Redraft", teams: 10, myRank: 6, record: "2-4", pointsFor: 540, nextOpponent: "Pocket Passers", matchupStatus: "upcoming", myScore: 0, oppScore: 0, unread: 1, leading: false, draftIn: "2d 4h" },
+  { id: "office-league", name: "Office League '26", hue: "320", banner: "/user-banner.png", format: "Keeper", teams: 8, myRank: 2, record: "5-1", pointsFor: 588, nextOpponent: "HR Hitmen", matchupStatus: "upcoming", myScore: 0, oppScore: 0, unread: 0, leading: false },
+  { id: "college-buds", name: "College Buds", hue: "95", banner: "/gameday-hero.png", format: "Redraft", teams: 14, myRank: 9, record: "2-4", pointsFor: 512, nextOpponent: "The Quad", matchupStatus: "live", myScore: 64.2, oppScore: 90.8, unread: 5, leading: false },
+  { id: "whiteout-league", name: "Whiteout League", hue: "0", banner: "/white-banner.svg", format: "Redraft", teams: 12, myRank: 7, record: "3-3", pointsFor: 545, nextOpponent: "Blank Slate", matchupStatus: "upcoming", myScore: 0, oppScore: 0, unread: 0, leading: false },
 ]
 
 export const userProfile = {

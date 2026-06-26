@@ -64,7 +64,7 @@ function ExpandToggle({
       title={`${label} menu`}
       aria-label={`Toggle ${label} menu`}
       aria-expanded={open}
-      className="absolute -bottom-1 -right-1 grid h-4 w-4 place-items-center rounded-full bg-sidebar-accent text-muted-foreground ring-2 ring-sidebar transition-colors hover:bg-primary hover:text-primary-foreground"
+      className="absolute -bottom-1 -right-1 grid h-4 w-4 place-items-center rounded-full bg-sidebar-accent text-muted-foreground ring-2 ring-sidebar transition-colors hover:bg-primary hover:text-primary-foreground lg:hidden"
     >
       <ChevronRight size={10} strokeWidth={3} className={cn("transition-transform", open && "rotate-90")} />
     </button>
@@ -75,7 +75,7 @@ function ExpandToggle({
  * mt-3 clears the parent item's chevron toggle, which overhangs its corner. */
 function SubMenu({ children }: { children: ReactNode }) {
   return (
-    <div className="mb-1 mt-3 flex w-full flex-col items-center gap-0.5 rounded-2xl bg-sidebar-accent/50 p-1">
+    <div className="mb-1 mt-3 flex w-full flex-col items-center gap-0.5 rounded-2xl bg-sidebar-accent/50 p-1 lg:hidden">
       {children}
     </div>
   )
